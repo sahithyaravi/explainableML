@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if current_user.is_anonymous %}
+  <p>Welcome to Active Learning Explorer, Please login to continue</p>
+{% else  %}
+  <p>Welcome to Active Learning Explorer, {{ current_user.username }}!
+     </p>
+{% endif %}
+{% endblock %}

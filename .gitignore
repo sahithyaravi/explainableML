@@ -1,0 +1,4 @@
+.idea/
+*.pyc
+flask-cache-dir/
+notebooks/.ipynb_checkpoints/guided_training-SVC-checkpoint.ipynb
