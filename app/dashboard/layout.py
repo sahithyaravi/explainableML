@@ -1,7 +1,8 @@
 import dash_core_components as dcc
 import dash_html_components as html
-
-
+font = ["Nunito Sans", "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "Roboto", '"Helvetica Neue"',
+        "Arial", "sans-serif", '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"']
+# Components
 top_bar = html.Div(
             id='top-bar',
             className='row',
@@ -9,28 +10,39 @@ top_bar = html.Div(
                    'height': '10px',
                    }
         )
-title = html.H2(html.A('Active Learning Explorer',
-                           style={'text-decoration': 'none', 'color': 'inherit'},
-                           href='https://github.com/plotly/dash-svm'))
+title = html.H4(html.A('Shapely accelerated smart labelling',
+                       style={'text-decoration': 'none', 'color': 'inherit'},
+                       href='https://github.com/plotly/dash-svm'))
 
 choose_dataset = dcc.Dropdown(id='select_dataset',
                               options=[{'label': 'davidson', 'value': 'davidson_dataset'},
                                        {'label': 'founta', 'value': 'founta_dataset'},
                                        {'label': 'gao', 'value': 'gao_dataset'},
-                                       {'label': 'golbeck', 'value': 'golbeck_dataset'},
                                        {'label': 'waseem', 'value': 'waseem_dataset'},
-                                       {'label': 'mnist-mini', 'value': 'mnist'},
+                                       #{'label': 'mnist-mini', 'value': 'mnist'},
                                        ],
                               clearable=False,
                               searchable=False,
                               value='davidson_dataset'
                               )
 
-submit_dataset = html.Button('Start', id='start')
-submit_notification = html.Div(id='notification')
-radio_label = dcc.RadioItems(id='radio_label')
+submit_dataset = html.Button('Start fresh', id='start')
+queries = html.Div(id='queries')
+
 url = dcc.Location(id='url')
 home_page = dcc.Link('Home', refresh=True, href='/index/')
+###################
+next_button = html.Button('Fetch next batch', id='next_round', autoFocus=True,
+                          style={'color': 'white', 'background-color': 'green'})
+radio_label = dcc.RadioItems(
+    id='radio_label',
+    options=[
+        {'label': '1', 'value': 1},
+        {'label': '0', 'value': 0},
+        {'label': 'Bad cluster', 'value': -1}
+    ],
+    value=0
+)
 layout = html.Div(
     children=[
         # TOP BAR AND BANNER
@@ -48,7 +60,10 @@ layout = html.Div(
                                    ]),
              ]),
         submit_dataset,
-        submit_notification,
-        dcc.Store(id='store_clicks')
 
-    ])
+        dcc.Store(id='store_clicks'),
+
+        queries,
+        radio_label,
+        next_button,
+    ], style={"fontFamily": font})

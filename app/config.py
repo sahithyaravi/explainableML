@@ -6,7 +6,10 @@ class Config(object):
     """
     The location of apps database
     """
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+    # read this from JSON
+    PASSWORD = '1993sahi11'
+    database_url = f"mysql+pymysql://root:{PASSWORD}@localhost/shapely"
+    SQLALCHEMY_DATABASE_URI = database_url or \
                               'sqlite:///' + os.path.join(basedir, 'app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = 'abcd'

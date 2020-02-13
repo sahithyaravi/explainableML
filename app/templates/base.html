@@ -1,5 +1,14 @@
 <div>
-  Test:
+
+<style>
+body {
+  background-image: url('/app/templates/background.jpg');
+  /*  background-color: darkcyan;*/
+  background-position: 50% 50%;
+  background-repeat: repeat;
+}
+</style>
+
   <a href="{{ url_for('index') }}">Home</a>
   {% if current_user.is_anonymous %}
       <a href="{{ url_for('login') }}">Login</a>
