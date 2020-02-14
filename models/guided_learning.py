@@ -90,7 +90,7 @@ class GuidedLearner:
             df_cluster['centroid'] = False
             df_cluster = df_cluster.append({'text': center_text, 'cluster_id': cluster_id,
                                             'centroid': True}, ignore_index=True)
-            df_final_labels = pd.concat([df_final_labels, df_cluster])
+            df_final_labels = pd.concat([df_final_labels, df_cluster], ignore_index=True)
 
             cp = principals[cluster_indices]
             data.append(go.Scatter(x=cp[:, 0],
@@ -113,11 +113,11 @@ class GuidedLearner:
 
         fig = go.Figure(data=data)
         fig.show()
-        #df_final_labels.to_csv(f"../datasets/{self.dataset}_cluster.csv")
-        df_final_labels.to_sql(f"{self.dataset}_cluster", con=self.engine)
+        df_final_labels.reset_index(drop=True, inplace=True)
+        df_final_labels.to_sql(f"{self.dataset}_cluster", con=self.engine, if_exists="replace")
 
 
-learner = GuidedLearner('waseem_dataset')
+learner = GuidedLearner('gao_dataset')
 learner.fit_svc(max_iter=2000, C=1, kernel='linear')
 learner.get_shap_values()
 learner.cluster_data_pool(n_clusters=20)

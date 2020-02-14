@@ -20,64 +20,53 @@ def register_callbacks(app):
         stored_clicks = 0 if stored_clicks is None else stored_clicks
         if clicks is not None and clicks > stored_clicks:
             logging.info("Fetch dataset for labelling: {}".format(dataset))
-            #df = pd.read_csv(f"../datasets/{dataset}_cluster.csv")
-            PASSWORD = '1993sahi11'
-            database_url = f"mysql+pymysql://root:{PASSWORD}@localhost/shapely"
-            df = pd.read_sql_table(f"{dataset}_cluster", database_url)
+            from ..utils import fetch_init_queries
+            df = fetch_init_queries(dataset)
             df['labelled'] = False
             df['label'] = 0
-            print(df.head())
+            logging.info(df.head())
             df.to_pickle('queries.pkl')
-
-            # Plot ground truth data.
-            # Plot clusters
         return clicks
 
     @app.callback(Output('queries', 'children'),
                   [Input('next_round', 'n_clicks'),
-                   Input('radio_label', 'value')],
-                  [State('select_dataset', 'value')])
-    def get_queries(next_round, label, dataset):
+                   ],
+                  [State('radio_label', 'value'),
+                   State('select_dataset', 'value')])
+    def get_queries_write_labels(next_round, label, dataset):
         output = ""
         if next_round is not None:
             if next_round > 1:
                 logging.debug("Updating labels for round", next_round-1)
-                update_labels(label, dataset)
-            df = fetch_queries(dataset=dataset)
+
+            df = fetch_queries(dataset, next_round, label)
             display_table = create_table(pd.DataFrame(df['text']))
             output = html.Div(display_table)
         return output
 
 
-def update_labels(label, dataset):
-    print("update labels")
-    df = pd.read_pickle('queries.pkl')
-    df_false = df[df["labelled"] == False]
-    min_cluster = df_false['cluster_id'].min()
-    df["labelled"].loc[df["cluster_id"] == min_cluster] = True
-    df["label"].loc[df["cluster_id"] == min_cluster] = label
-    labelled_df = df[df["cluster_id"] == min_cluster]
-    # Insert the labels in to database using pymysql
-    from app.utils import write_to_db
-    write_to_db(labelled_df, dataset=dataset)
-    df.to_pickle('queries.pkl')
-    df.to_csv('queries.csv')
-
-
-def fetch_queries(dataset):
+def fetch_queries(dataset, next_round, labels):
     # fetch dataset queries from pickle for now
     logging.debug(f"directory{os.curdir}")
     df = pd.read_pickle('queries.pkl')
-    PASSWORD = '1993sahi11'
-    database_url = f"mysql+pymysql://root:{PASSWORD}@localhost/shapely"
-    labels = pd.read_sql_table("label", database_url)
-    id = current_user.id
-    omit_indices = labels[labels["user_id"]== id and labels["dataset"]]
-    df = df[df["labelled"] == False]
-    min_cluster = df["cluster_id"].min()
+    # Select unlabelled min cluster
+    from ..utils import get_labelled_indices
+    labelled_indices = get_labelled_indices(dataset, current_user.id)
+    df_unlabelled = df[~df["index"].isin(labelled_indices)]
+    min_cluster = df_unlabelled["cluster_id"].min()
+    logging.info(f" Writing batch {min_cluster} to db")
+    if next_round > 1:
+        df["label"].loc[df["cluster_id"] == min_cluster] = labels
+        labelled_df = df[df["cluster_id"] == min_cluster]
+        # Insert the labels in to database using pymysql
+        from app.utils import write_to_db
+        write_to_db(labelled_df, dataset=dataset)
+        print(labelled_df['index'].values)
+        df_unlabelled = df_unlabelled[~df_unlabelled["index"].isin(labelled_df['index'].values)]
+        min_cluster = df_unlabelled["cluster_id"].min()
     current_cluster = df[df["cluster_id"] == min_cluster]
-    print(current_cluster.cluster_id.unique())
-    return pd.DataFrame(current_cluster)
+    logging.info(f" Reading batch {min_cluster} to query")
+    return current_cluster
 
 
 def create_table(df):
