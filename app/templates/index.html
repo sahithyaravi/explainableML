@@ -2,11 +2,12 @@
 
 {% block content %}
 
-
+  <div class="jumbo">
 {% if current_user.is_anonymous %}
-  <p>Welcome to Shapely smart labelling tool, Please login to continue</p>
+  <h2>Welcome to GuidedNLP </h2> <h3> Please <a href="{{ url_for('login') }}">Login</a> to continue ></h3>
 {% else  %}
-  <p>Welcome to Shapely smart labelling tool, {{ current_user.username }}!
-     </p>
+  <h2>Welcome to GuidedNLP, {{ current_user.username }}! <h3> <a href="{{ '/dashboard'}}">Start labelling </a></h3>
+     </h2>
 {% endif %}
+    </div>
 {% endblock %}
