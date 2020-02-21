@@ -40,6 +40,9 @@ class GuidedLearner:
         self.model = None
         self.shap_values_train = None
         self. shap_values_pool = None
+        self.key_words_pos = None
+        self.key_words_neg = None
+        self.key_words = None
         PASSWORD = '1993sahi11'
         database_url = f"mysql+pymysql://root:{PASSWORD}@localhost/shapely"
         SQLALCHEMY_DATABASE_URI = database_url
@@ -55,7 +58,23 @@ class GuidedLearner:
         # TODO extract feature importance value of each feature
         self.shap_values_train = explainer.shap_values(self.x_train)
         self.shap_values_pool = explainer.shap_values(self.x_pool)
-        shap.summary_plot(self.shap_values_pool, self.x_pool, feature_names=self.tfid.get_feature_names())
+        feature_names = np.array(self.tfid.get_feature_names())  # len(feature_names) = #cols in shap_values_pool
+        shap.summary_plot(self.shap_values_pool, self.x_pool, feature_names=feature_names)
+
+    def get_keywords(self):
+        feature_names = np.array(self.tfid.get_feature_names())  # len(feature_names) = #cols in shap_values_pool
+        arr = self.shap_values_pool.copy()
+        arr[arr == 0] = np.nan
+        arr_pos = self.shap_values_pool.copy()
+        arr_neg = self.shap_values_pool.copy()
+        arr_pos[arr_pos <= 0] = np.nan
+        arr_neg[arr_neg >= 0] = np.nan
+        indices = np.nanargmax(arr, axis=1)
+        pos_indices = np.nanargmax(arr_pos, axis=1)
+        neg_indices = np.nanargmin(arr_neg, axis=1)
+        self.key_words = np.array([feature_names[indices]]).T
+        self.key_words_pos = np.array([feature_names[pos_indices]]).T
+        self.key_words_neg = np.array([feature_names[neg_indices]]).T
 
     def cluster_data_pool(self, n_clusters):
         kmeans = KMeans(n_clusters=n_clusters, n_jobs=-1, max_iter=600)
@@ -88,6 +107,9 @@ class GuidedLearner:
             df_cluster = pd.DataFrame({'text': cluster_text})
             df_cluster['cluster_id'] = cluster_id
             df_cluster['centroid'] = False
+            df_cluster['positive'] = self.key_words_pos[cluster_indices]
+            df_cluster['negative'] = self.key_words_neg[cluster_indices]
+            df_cluster['keywords'] = self.key_words[cluster_indices]
             df_cluster = df_cluster.append({'text': center_text, 'cluster_id': cluster_id,
                                             'centroid': True}, ignore_index=True)
             df_final_labels = pd.concat([df_final_labels, df_cluster], ignore_index=True)
@@ -117,8 +139,9 @@ class GuidedLearner:
         df_final_labels.to_sql(f"{self.dataset}_cluster", con=self.engine, if_exists="replace")
 
 
-learner = GuidedLearner('gao_dataset')
+learner = GuidedLearner('founta_dataset')
 learner.fit_svc(max_iter=2000, C=1, kernel='linear')
 learner.get_shap_values()
+learner.get_keywords()
 learner.cluster_data_pool(n_clusters=20)
 

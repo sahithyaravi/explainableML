@@ -2,17 +2,13 @@ import dash_core_components as dcc
 import dash_html_components as html
 font = ["Nunito Sans", "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "Roboto", '"Helvetica Neue"',
         "Arial", "sans-serif", '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"']
+
 # Components
-top_bar = html.Div(
-            id='top-bar',
-            className='row',
-            style={'backgroundColor': '#fa4f56',
-                   'height': '10px',
-                   }
-        )
-title = html.H4(html.A('Shapely accelerated smart labelling',
-                       style={'text-decoration': 'none', 'color': 'inherit'},
-                       href='https://github.com/plotly/dash-svm'))
+home_page = dcc.Link('Home', refresh=True, href='/index/', style={'float': 'right', 'color': '#999',
+                                                                  })
+top_bar = html.Header(html.Div([html.H1('Guided Learner', className='logo'),
+                      home_page], className='container'))
+
 
 choose_dataset = dcc.Dropdown(id='select_dataset',
                               options=[{'label': 'davidson', 'value': 'davidson_dataset'},
@@ -30,7 +26,7 @@ submit_dataset = html.Button('Start fresh', id='start')
 queries = html.Div(id='queries')
 
 url = dcc.Location(id='url')
-home_page = dcc.Link('Home', refresh=True, href='/index/')
+
 ###################
 next_button = html.Button('Fetch next batch', id='next_round', autoFocus=True,
                           style={'color': 'white', 'background-color': 'green'})
@@ -47,9 +43,7 @@ layout = html.Div(
     children=[
         # TOP BAR AND BANNER
         url,
-        home_page,
         top_bar,
-        title,
         html.Div(
             className='control-section',
             children=[
@@ -66,4 +60,4 @@ layout = html.Div(
         queries,
         radio_label,
         next_button,
-    ], style={"fontFamily": font})
+    ],  style={"fontFamily": font})

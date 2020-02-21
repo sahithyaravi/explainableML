@@ -40,7 +40,14 @@ def register_callbacks(app):
                 logging.debug("Updating labels for round", next_round-1)
 
             df = fetch_queries(dataset, next_round, label)
-            display_table = create_table(pd.DataFrame(df['text']))
+            table_text = []
+            for index, row in df.iterrows():
+                row["text"] = " " + row["text"] + " "
+                str1 = row["text"].split(row["keywords"])
+                keyword = row["keywords"]
+                out = f"{str1[0]}**{keyword}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{keyword}**"
+                table_text.append(out)
+            display_table = create_table(pd.DataFrame(table_text))
             output = html.Div(display_table)
         return output
 
@@ -61,7 +68,6 @@ def fetch_queries(dataset, next_round, labels):
         # Insert the labels in to database using pymysql
         from app.utils import write_to_db
         write_to_db(labelled_df, dataset=dataset)
-        print(labelled_df['index'].values)
         df_unlabelled = df_unlabelled[~df_unlabelled["index"].isin(labelled_df['index'].values)]
         min_cluster = df_unlabelled["cluster_id"].min()
     current_cluster = df[df["cluster_id"] == min_cluster]
@@ -71,8 +77,7 @@ def fetch_queries(dataset, next_round, labels):
 
 def create_table(df):
     table = dash_table.DataTable(
-
-        columns=[{"name": i, "id": i} for i in df.columns],
+        columns=[dict(name=i, id=i, presentation='markdown', type='text') for i in df.columns],
         data=df.to_dict('records'),
         style_as_list_view=True,
         filter_action="native",
