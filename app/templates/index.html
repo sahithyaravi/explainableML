@@ -2,12 +2,17 @@
 
 {% block content %}
 
-  <div class="jumbo">
+  <div class="jumbotron">
+  <div class="container">
 {% if current_user.is_anonymous %}
-  <h2>Welcome to GuidedNLP </h2> <h3> Please <a href="{{ url_for('login') }}">Login</a> to continue ></h3>
+  <h1>Welcome to GuidedNLP </h1>
+    <p> Please <a href="{{ url_for('login') }}"> <strong>Login</strong></a> to continue ></p>
 {% else  %}
-  <h2>Welcome to GuidedNLP, {{ current_user.username }}! <h3> <a href="{{ '/dashboard'}}">Start labelling </a></h3>
-     </h2>
+  <h1>Welcome to GuidedNLP, {{ current_user.username }}! </h1>
+    <a href="{{ '/dashboard'}}" class="btn">  Start labelling </a>
+
 {% endif %}
     </div>
+   </div>
+
 {% endblock %}

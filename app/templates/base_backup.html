@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html>
-<div class="header">
-  <div class="container-fluid">
-    <a href=""><h1 class="brand"><span>GuidedNLP</span></h1></a>
-
+  <head>
+    <title>Flask App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  </head>
+  <body>
 
-            <ul class="nav-items">
+  <header>
+    <div class="container">
+      <h1 class="logo">GuidedNLP</h1>
+        <nav>
+            <ul class="menu">
                 <li><a href="{{ url_for('index') }}">Home</a></li>
                 {% if current_user.is_anonymous %}
                     <li><a href="{{ url_for('login') }}">Login</a></li>
@@ -15,12 +19,14 @@
                     <li>  <a href="{{ url_for('logout') }}">Logout</a></li>
                 {% endif %}
             </ul>
-        </div>
+        </nav>
     </div>
+  </header>
 
-
-
+    <div class="container">
       {% block content %}
       {% endblock %}
+    </div>
 
+  </body>
 </html>
