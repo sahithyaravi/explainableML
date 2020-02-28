@@ -5,6 +5,7 @@ from app.config import *
 import logging
 from app.models import Labels
 
+
 def write_to_db(df, dataset):
     logging.info(f"writing user labels to db {current_user.username}")
     for index, row in df.iterrows():
@@ -17,7 +18,7 @@ def write_to_db(df, dataset):
         db.session.commit()
 
 
-def fetch_init_queries(dataset):
+def fetch_all_unlabelled_data(dataset):
     database_url = Config.SQLALCHEMY_DATABASE_URI
     df = pd.read_sql_table(f"{dataset}_cluster", database_url)
     return df
@@ -38,4 +39,11 @@ def clear_labels():
     db.session.commit()
 
 
-clear_labels()
+def get_labelled_data(dataset_name):
+    database_url = Config.SQLALCHEMY_DATABASE_URI
+    sql = f"SELECT * from label where dataset='{dataset_name}'"
+    df = pd.read_sql_query(sql=sql, con=database_url)
+    return df
+
+
+

@@ -20,8 +20,8 @@ def register_callbacks(app):
         stored_clicks = 0 if stored_clicks is None else stored_clicks
         if clicks is not None and clicks > stored_clicks:
             logging.info("Fetch dataset for labelling: {}".format(dataset))
-            from ..utils import fetch_init_queries
-            df = fetch_init_queries(dataset)
+            from ..utils import fetch_all_unlabelled_data
+            df = fetch_all_unlabelled_data(dataset)
             df['labelled'] = False
             df['label'] = 0
             logging.info(df.head())

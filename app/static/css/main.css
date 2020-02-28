@@ -63,6 +63,7 @@ body {
   -webkit-box-pack: center;
           justify-content: center;
   width: 100%;
+
 }
 .header .nav-items li {
   margin-right: 16px;

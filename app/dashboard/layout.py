@@ -4,10 +4,12 @@ font = ["Nunito Sans", "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "Rob
         "Arial", "sans-serif", '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"']
 
 # Components
-home_page = dcc.Link('Home', refresh=True, href='/index/', style={'float': 'right', 'color': '#999',
-                                                                  })
-top_bar = html.Div(html.Div(html.A(html.H1("GuidedNLP",  className="brand")),
-                            className="container-fluid"), className='header')
+home_page = html.A(dcc.Link('Home', refresh=True, href='/index/', className='li'),  className='nav-items')
+brand_name = html.H1("GuidedNLP",  className="brand")
+top_bar = html.Div(html.Div([html.A(brand_name),
+                             home_page],
+                            className="container-fluid"),
+                   className='header')
 
 
 choose_dataset = dcc.Dropdown(id='select_dataset',
