@@ -7,6 +7,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 import plotly
 import plotly.graph_objs as go
+from sklearn.manifold import TSNE
 from sklearn.metrics import f1_score, confusion_matrix, accuracy_score
 import seaborn as sns
 import shap
@@ -17,26 +18,19 @@ from sqlalchemy import create_engine
 
 
 class GuidedLearner:
-    def __init__(self, dataset):
+    def __init__(self, df_train, df_test, df_pool, dataset):
+        self.df_train = df_train
+        self.df_test = df_test
+        self.df_pool = df_pool
         self.dataset = dataset
-        self.df = pd.read_csv(f"../datasets/{dataset}.csv")
-        self.x = self.df['text'].values
-        self.y = self.df['label'].values
         self.tfid = TfidfVectorizer(max_features=5000)
-        self.x = self.tfid.fit_transform(self.x).toarray()
-        indices = np.random.randint(low=0, high=self.x.shape[0], size=self.x.shape[0])
-        train_indices = indices[0:round(0.2 * self.x.shape[0])]
-        test_indices = indices[round(0.2 * self.x.shape[0]): round(0.4 * self.x.shape[0])]
-        pool_indices = indices[round(0.4 * self.x.shape[0]):]
-        self.df_train = self.df.iloc[train_indices]['text'].values
-        self.df_test = self.df.iloc[test_indices]['text'].values
-        self.df_pool = self.df.iloc[pool_indices]['text'].values
-        self.x_train = self.x[train_indices]
-        self.y_train = self.y[train_indices]
-        self.x_test = self.x[test_indices]
-        self.y_test = self.y[test_indices]
-        self.x_pool = self.x[pool_indices]
-        self.y_pool = self.y[pool_indices]
+        self.tfid.fit(self.df_train['text'].values)
+        self.x_train = self.tfid.transform(self.df_train['text'].values).toarray()
+        self.y_train = self.df_train['label'].values
+        self.x_test = self.tfid.transform(self.df_test['text'].values).toarray()
+        self.y_test = self.df_test['label'].values
+        self.x_pool = self.tfid.transform(self.df_pool['text'].values).toarray()
+        self.y_pool = self.df_pool['label'].values
         self.model = None
         self.shap_values_train = None
         self. shap_values_pool = None
@@ -47,6 +41,11 @@ class GuidedLearner:
         database_url = f"mysql+pymysql://root:{PASSWORD}@localhost/shapely"
         SQLALCHEMY_DATABASE_URI = database_url
         self.engine = create_engine(SQLALCHEMY_DATABASE_URI, echo=False)
+
+        self.df_train.to_sql(f"{self.dataset}_train", con=self.engine, if_exists="replace",
+                             index=False)
+        self.df_test.to_sql(f"{self.dataset}_test", con=self.engine, if_exists="replace",
+                            index=False)
 
     def fit_svc(self, max_iter, C, kernel):
         self.model = SVC(max_iter=max_iter, C=C, kernel=kernel)
@@ -93,7 +92,9 @@ class GuidedLearner:
                 centroid_indices[cluster_label] = i
                 centroid_match[cluster_label] = similarity_to_center[i]
         pca = PCA(n_components=2)
-        principals = pca.fit_transform(self.x_pool)
+       # principals = pca.fit_transform(self.shap_values_pool)
+        tsne = TSNE(n_components=2, perplexity=20)
+        principals = tsne.fit_transform(self.shap_values_pool)
 
         data = []
         collect = dict()
@@ -101,9 +102,9 @@ class GuidedLearner:
         df_final_labels = pd.DataFrame()
         for cluster_id in np.unique(kmeans.labels_):
             cluster_indices = np.where(kmeans.labels_ == cluster_id)
-            cluster_text = self.df_pool[cluster_indices]
+            cluster_text = self.df_pool['text'].values[cluster_indices]
             center_index = centroid_indices[cluster_id]
-            center_text = self.df_pool[center_index]
+            center_text = self.df_pool['text'].values[center_index]
             df_cluster = pd.DataFrame({'text': cluster_text})
             df_cluster['cluster_id'] = cluster_id
             df_cluster['centroid'] = False
@@ -131,7 +132,7 @@ class GuidedLearner:
                                                line=dict(color='black', width=5)),
                                    name='centroid cluster ' + str(cluster_id)
                                    ))
-            collect[cluster_id] = self.df_pool[cluster_indices]
+            collect[cluster_id] = self.df_pool['text'].values[cluster_indices]
 
         fig = go.Figure(data=data)
         fig.show()
@@ -139,9 +140,5 @@ class GuidedLearner:
         df_final_labels.to_sql(f"{self.dataset}_cluster", con=self.engine, if_exists="replace")
 
 
-learner = GuidedLearner('founta_dataset')
-learner.fit_svc(max_iter=2000, C=1, kernel='linear')
-learner.get_shap_values()
-learner.get_keywords()
-learner.cluster_data_pool(n_clusters=20)
+
 

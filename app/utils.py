@@ -24,11 +24,23 @@ def fetch_all_unlabelled_data(dataset):
     return df
 
 
+def fetch_train(dataset):
+    database_url = Config.SQLALCHEMY_DATABASE_URI
+    df = pd.read_sql_table(f"{dataset}_train", database_url)
+    return df
+
+
+def fetch_test(dataset):
+    database_url = Config.SQLALCHEMY_DATABASE_URI
+    df = pd.read_sql_table(f"{dataset}_test", database_url)
+    return df
+
+
 def get_labelled_indices(dataset, user):
     database_url = Config.SQLALCHEMY_DATABASE_URI
     user_id = user
     dataset_name = dataset
-    sql = f"SELECT row_id from label where user_id={user_id} and dataset='{dataset_name}'"
+    sql = f"SELECT row_id from label where user_id={user_id} and dataset='{dataset_name}' and label!= -1"
     df = pd.read_sql_query(sql=sql, con=database_url)
     query_indices = df['row_id'].values
     return query_indices

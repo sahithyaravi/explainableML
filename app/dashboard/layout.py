@@ -39,7 +39,8 @@ radio_label = dcc.RadioItems(
         {'label': '0', 'value': 0},
         {'label': 'Bad cluster', 'value': -1}
     ],
-    value=0
+    value=0,
+    style={'marginTop': '10px', 'marginBottom': '50px'}
 )
 layout = html.Div(
     children=[

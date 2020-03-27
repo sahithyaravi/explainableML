@@ -47,8 +47,11 @@ def register_callbacks(app):
                 keyword = row["keywords"]
                 out = f"{str1[0]}**{keyword}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{keyword}**"
                 table_text.append(out)
-            display_table = create_table(pd.DataFrame(table_text))
-            output = html.Div(display_table)
+            if table_text:
+                display_table = create_table(pd.DataFrame(table_text))
+                output = html.Div(display_table)
+            else:
+                output = html.Div(" Batch Completed, Model retraining")
         return output
 
 
@@ -89,7 +92,8 @@ def create_table(df):
                      'maxWidth': '1000px',
                      'maxHeight': '400px',
                      'overflowY': 'scroll',
-                     'overflowX':'scroll'},
+                     'overflowX': 'scroll',
+                     'marginBottom': '50px'},
         page_action='none',
 
     )
