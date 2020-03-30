@@ -10,7 +10,8 @@ class Trainer:
 
     def init_train(self):
         """Initial training of the dataset using guided learner"""
-        df = pd.read_csv(f"../datasets/{self.dataset}.csv")
+        df = pd.read_csv(f"datasets/{self.dataset}.csv")
+
         indices = np.random.randint(low=0, high=df.shape[0], size=df.shape[0])
         train_indices = indices[0:round(0.2 * df.shape[0])]
         test_indices = indices[round(0.2 * df.shape[0]): round(0.4 * df.shape[0])]
@@ -20,7 +21,7 @@ class Trainer:
         df_test = df.iloc[test_indices]
         df_pool = df.iloc[pool_indices]
 
-        learner = GuidedLearner(df_train, df_test, df_pool, self.dataset)
+        learner = GuidedLearner(df_train, df_test, df_pool, self.dataset, 1)
         learner.fit_svc(max_iter=2000, C=1, kernel='linear')
         learner.get_shap_values()
         learner.get_keywords()

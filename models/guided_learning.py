@@ -18,7 +18,8 @@ from sqlalchemy import create_engine
 
 
 class GuidedLearner:
-    def __init__(self, df_train, df_test, df_pool, dataset):
+    def __init__(self, df_train, df_test, df_pool, dataset, round):
+        self.round = round
         self.df_train = df_train
         self.df_test = df_test
         self.df_pool = df_pool
@@ -137,6 +138,7 @@ class GuidedLearner:
         fig = go.Figure(data=data)
         fig.show()
         df_final_labels.reset_index(drop=True, inplace=True)
+        df_final_labels["round"] = self.round
         df_final_labels.to_sql(f"{self.dataset}_cluster", con=self.engine, if_exists="replace")
 
 

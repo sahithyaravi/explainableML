@@ -33,4 +33,4 @@ class Labels(db.Model):
     row_id = db.Column(db.Integer, index=True)
     batch = db.Column(db.Integer, index=True)
     label = db.Column(db.Integer)
-
+    round = db.Column(db.Integer, index=True)

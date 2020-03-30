@@ -6,7 +6,7 @@ import dash_table
 import logging
 import os
 from flask_login import current_user
-
+rnd = 1
 logging.basicConfig(level=logging.INFO)
 
 
@@ -59,9 +59,10 @@ def fetch_queries(dataset, next_round, labels):
     # fetch dataset queries from pickle for now
     logging.debug(f"directory{os.curdir}")
     df = pd.read_pickle('queries.pkl')
+    round = df["round"][0]
     # Select unlabelled min cluster
     from ..utils import get_labelled_indices
-    labelled_indices = get_labelled_indices(dataset, current_user.id)
+    labelled_indices = get_labelled_indices(dataset, current_user.id, round)
     df_unlabelled = df[~df["index"].isin(labelled_indices)]
     min_cluster = df_unlabelled["cluster_id"].min()
     logging.info(f" Writing batch {min_cluster} to db")

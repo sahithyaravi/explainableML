@@ -11,6 +11,7 @@ class Retrainer:
         self.df_pool = None
         self.df_train = None
         self.df_test = None
+        self.round = 0
 
     def process_labels_from_all_users(self):
         labels = get_labelled_data(self.dataset)
@@ -23,6 +24,7 @@ class Retrainer:
         train = fetch_train(self.dataset)
         labels.sort_values(by='row_id')
         df["label"] = labels['label']
+        self.round = df["round"][0] + 1
 
         self.df_pool = df.loc[df["label"] == -1]
         self.df_train = df.loc[df["label"] != -1]
@@ -30,11 +32,11 @@ class Retrainer:
         self.df_train = self.df_train.append(train, ignore_index=True)
         self.df = df
         print(self.df_train.columns)
-        self.df_train.drop('level_0', axis=1)
+        # self.df_train.drop('level_0', axis=1)
         print(train.shape, self.df_train.shape, self.df_pool.shape)
 
     def retrain_model(self):
-        learner = GuidedLearner(self.df_train, self.df_test, self.df_pool, self.dataset)
+        learner = GuidedLearner(self.df_train, self.df_test, self.df_pool, self.dataset, self.round)
         learner.fit_svc(max_iter=2000, C=1, kernel='linear')
         learner.get_shap_values()
         learner.get_keywords()

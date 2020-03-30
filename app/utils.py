@@ -13,7 +13,8 @@ def write_to_db(df, dataset):
                        user_id=current_user.id,
                        row_id=index,
                        batch=row["cluster_id"],
-                       label=row["label"])
+                       label=row["label"],
+                       round=row["round"])
         db.session.add(label)
         db.session.commit()
 
@@ -36,11 +37,11 @@ def fetch_test(dataset):
     return df
 
 
-def get_labelled_indices(dataset, user):
+def get_labelled_indices(dataset, user, rnd):
     database_url = Config.SQLALCHEMY_DATABASE_URI
     user_id = user
     dataset_name = dataset
-    sql = f"SELECT row_id from label where user_id={user_id} and dataset='{dataset_name}' and label!= -1"
+    sql = f"SELECT row_id from label where user_id={user_id} and dataset='{dataset_name}' and round = {rnd}"
     df = pd.read_sql_query(sql=sql, con=database_url)
     query_indices = df['row_id'].values
     return query_indices
