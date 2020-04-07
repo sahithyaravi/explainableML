@@ -104,6 +104,8 @@ class GuidedLearner:
         for cluster_id in np.unique(kmeans.labels_):
             cluster_indices = np.where(kmeans.labels_ == cluster_id)
             cluster_text = self.df_pool['text'].values[cluster_indices]
+
+            cluster_truth = self.df_pool['label'].values[cluster_indices]
             center_index = centroid_indices[cluster_id]
             center_text = self.df_pool['text'].values[center_index]
             df_cluster = pd.DataFrame({'text': cluster_text})
@@ -112,6 +114,7 @@ class GuidedLearner:
             df_cluster['positive'] = self.key_words_pos[cluster_indices]
             df_cluster['negative'] = self.key_words_neg[cluster_indices]
             df_cluster['keywords'] = self.key_words[cluster_indices]
+            df_cluster['truth'] = cluster_truth
             df_cluster = df_cluster.append({'text': center_text, 'cluster_id': cluster_id,
                                             'centroid': True}, ignore_index=True)
             df_final_labels = pd.concat([df_final_labels, df_cluster], ignore_index=True)
