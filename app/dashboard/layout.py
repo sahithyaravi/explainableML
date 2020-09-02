@@ -1,5 +1,6 @@
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table
 font = ["Nunito Sans", "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "Roboto", '"Helvetica Neue"',
         "Arial", "sans-serif", '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"']
 
@@ -26,12 +27,13 @@ choose_dataset = dcc.Dropdown(id='select_dataset',
                               )
 
 submit_dataset = html.Button('Submit', id='start', autoFocus=True)
-queries = html.Div(id='queries')
+
+queries = dcc.Loading(html.Div(id='queries'))
 
 url = dcc.Location(id='url')
 
 ###################
-next_button = html.Button('Fetch next batch', id='next_round', autoFocus=True,
+next_button = html.Button('NEXT', id='next_round', autoFocus=True,
                           style={'color': 'white', 'background-color': 'green'})
 radio_label = dcc.RadioItems(
     id='radio_label',
@@ -40,8 +42,21 @@ radio_label = dcc.RadioItems(
         {'label': 'Non-hate', 'value': 0},
         {'label': 'Bad cluster', 'value': -1}
     ],
-    style={'marginTop': '10px', 'marginBottom': '50px'}
+    style={'display': 'none'}
 )
+
+stop_watch = html.Div([
+    dcc.Interval(id='interval1', interval=5 * 1000, n_intervals=0),
+    html.H1(id='label1', children='')
+])
+
+dummy_table = dash_table.DataTable(
+
+        selected_rows=[],
+        id='datatable',
+        page_action='none',
+
+    )
 layout = html.Div(
     children=[
         # TOP BAR AND BANNER
@@ -63,9 +78,10 @@ layout = html.Div(
 
              ]),
 
-
+        dummy_table,
         dcc.Store(id='store_clicks'),
         queries,
         radio_label,
         next_button,
+        stop_watch,
     ],  style={"fontFamily": font, 'verticalAlign': 'middle'})

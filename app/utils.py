@@ -60,3 +60,4 @@ def get_labelled_data(dataset_name):
 
 
 
+clear_labels()
