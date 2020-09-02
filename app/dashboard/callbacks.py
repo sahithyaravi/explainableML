@@ -30,14 +30,14 @@ def register_callbacks(app):
 
     @app.callback(Output('queries', 'children'),
                   [Input('next_round', 'n_clicks'),
+                   Input('radio_label', 'value')
                    ],
-                  [State('radio_label', 'value'),
-                   State('select_dataset', 'value')])
+                  [State('select_dataset', 'value')])
     def get_queries_write_labels(next_round, label, dataset):
         output = ""
         if next_round is not None:
             if next_round > 1:
-                logging.debug("Updating labels for round", next_round-1)
+                logging.debug("Updating labels for next round", next_round-1)
 
             df = fetch_queries(dataset, next_round, label)
             table_text = []
@@ -56,6 +56,7 @@ def register_callbacks(app):
 
 
 def fetch_queries(dataset, next_round, labels):
+    print(next_round, labels)
     # fetch dataset queries from pickle for now
     logging.debug(f"directory{os.curdir}")
     df = pd.read_pickle('queries.pkl')

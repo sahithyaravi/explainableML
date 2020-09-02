@@ -18,7 +18,7 @@ from sqlalchemy import create_engine
 
 
 class GuidedLearner:
-    def __init__(self, df_train, df_test, df_pool, dataset, round):
+    def __init__(self, df_train, df_test, df_pool, df_individual, dataset, round):
         self.round = round
         self.df_train = df_train
         self.df_test = df_test
@@ -42,7 +42,6 @@ class GuidedLearner:
         database_url = f"mysql+pymysql://root:{PASSWORD}@localhost/shapely"
         SQLALCHEMY_DATABASE_URI = database_url
         self.engine = create_engine(SQLALCHEMY_DATABASE_URI, echo=False)
-
         self.df_train.to_sql(f"{self.dataset}_train", con=self.engine, if_exists="replace",
                              index=False)
         self.df_test.to_sql(f"{self.dataset}_test", con=self.engine, if_exists="replace",
