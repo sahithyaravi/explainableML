@@ -34,3 +34,11 @@ class Labels(db.Model):
     batch = db.Column(db.Integer, index=True)
     label = db.Column(db.Integer)
     round = db.Column(db.Integer, index=True)
+
+
+class Timer(db.Model):
+    __tablename__ = 'time_elapsed'
+    id = db.Column(db.Integer, primary_key=True)
+    dataset = db.Column(db.String(64), index=True)
+    user_id = db.Column(db.Integer, index=True)
+    time = db.Column(db.Float, index=True)

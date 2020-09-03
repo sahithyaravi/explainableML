@@ -2,7 +2,7 @@ import dash
 from flask_login import login_required
 from flask.helpers import get_root_path
 from flask_caching import Cache
-from app.dashboard.layout import layout
+from app.dashboard.layout import serve_layout
 from app.dashboard.callbacks import register_callbacks
 
 
@@ -23,7 +23,7 @@ def register_dashapps(app):
 
     with app.app_context():
         dashapp.title = 'Dashapp'
-        dashapp.layout = layout
+        dashapp.layout = serve_layout
         register_callbacks(dashapp)
 
     _protect_dashviews(dashapp)

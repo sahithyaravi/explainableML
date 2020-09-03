@@ -3,7 +3,7 @@ from app.models import *
 import pandas as pd
 from app.config import *
 import logging
-from app.models import Labels
+from app.models import Labels, Timer
 
 
 def write_to_db(df, dataset):
@@ -17,6 +17,17 @@ def write_to_db(df, dataset):
                        round=row["round"])
         db.session.add(label)
         db.session.commit()
+
+
+def time_to_db(user, time, dataset):
+    logging.info(f"writing user labels to db {current_user.username}")
+
+    label = Timer(dataset=dataset,
+                  user_id=user,
+                  time=time)
+
+    db.session.add(label)
+    db.session.commit()
 
 
 def fetch_all_unlabelled_data(dataset):

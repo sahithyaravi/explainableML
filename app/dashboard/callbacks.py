@@ -10,30 +10,47 @@ import os
 from flask_login import current_user
 rnd = 1
 logging.basicConfig(level=logging.INFO)
+import time
 
 
 def register_callbacks(app):
     @app.callback([Output('store_clicks', 'data'),
-                   Output('info', 'children')],
+                   Output('info', 'children'),
+                   Output('next', 'children'),
+                   Output('dummy', 'children'),
+                   Output('timer', 'children')
+                   ],
                   [Input('start', 'n_clicks')],
                   [State('select_dataset', 'value'),
                    State('store_clicks', 'data'),
                    ],
                   )
     def get_dataset(clicks, dataset, stored_clicks):
+        dummy_table_layout = dash_table.DataTable(
+
+            selected_rows=[],
+            id='datatable',
+            page_action='none',
+
+        )
+        start_time = dcc.Store(id='start_time')
         stored_clicks = 0 if stored_clicks is None else stored_clicks
         style = {'marginTop': '10px', 'marginBottom': '50px', 'display': 'none'}
         text = ""
         logging.info(f"{dataset}")
+        next = ""
         if clicks is not None and clicks > stored_clicks and dataset is not None:
             if dataset == "davidson_dataset_cluster":
                 text = dcc.Markdown('''
                 * For this experiment, you will be presented groups of sentences.
                 * Select the sentences in the group which contain **hate-speech***.
-                * **Similar** sentences are present within the group.
+                * **Similar** sentences are present within the group. So it is possible to label all sentences by 
+                looking at 1-2 samples in the group.
                 * Important words may be highlighted in **bold**
                 * Click next to continue.
                 ''')
+                next = html.Button('NEXT', id='next_round', autoFocus=True,
+                                   style={'color': 'white', 'background-color': 'green', 'marginLeft': '100px'})
             else:
                 text = dcc.Markdown('''
                 * For this experiment, you will be presented a list of sentences.
@@ -41,6 +58,8 @@ def register_callbacks(app):
                 * **Random/ Dissimilar** sentences are listed together.
                 Click next to continue.
                 ''')
+                next = html.Button('NEXT', id='next_round', autoFocus=True,
+                                   style={'color': 'white', 'background-color': 'blue', 'marginLeft': '100px'})
 
             logging.info("Fetch dataset for labelling: {}".format(dataset))
             logging.info("Fetch dataset for labelling: {}".format(dataset))
@@ -51,18 +70,22 @@ def register_callbacks(app):
             logging.info(df.head())
             df.to_pickle(f"{dataset}queries.pkl")
             style = {'marginTop': '10px', 'marginBottom': '50px',  'display': 'block'}
+        return clicks, text, html.Div(next), dummy_table_layout, start_time
 
-        return clicks, text
-
-    @app.callback(Output('queries', 'children'),
+    @app.callback([Output('queries', 'children'),
+                   Output('start_time', 'data')],
                   [Input('next_round', 'n_clicks'),
                    ],
                   [State('datatable', 'selected_rows'),
-                   State('select_dataset', 'value')])
-    def get_queries_write_labels(next_round,  selected_rows, dataset):
+                   State('select_dataset', 'value'),
+                   State('start_time', 'data')])
+    def get_queries_write_labels(next_round,  selected_rows, dataset, start_time):
         output = ""
-        # print("selected rows", selected_rows)
-        if next_round is not None:
+        print(next_round, " next round ", dataset)
+
+        if next_round is not None and next_round:
+            if next_round == 1:
+                start_time = time.time()
             if next_round > 1:
                 logging.debug("Updating labels for next round", next_round-1)
 
@@ -81,7 +104,7 @@ def register_callbacks(app):
                     out = row["text"]
                 table_text.append(out)
             if table_text:
-                note = html.H4("Use select all checkbox if all sentences in the group are hate speech", style={'marginLeft': '50px'})
+                note = html.H3("Use select all checkbox if all sentences in the group are hate speech", style={'marginLeft': '50px'})
                 checkall = dcc.Checklist(options=
                                          [{'label': 'select/unselect all', 'value': 'all'},
                                           ],
@@ -92,8 +115,13 @@ def register_callbacks(app):
                 display_table = create_table(pd.DataFrame(table_text))
                 output = html.Div([note, checkall, display_table])
             else:
-                output = html.H3(" Great you have finished labelling this dataset. Thank you for your time :)")
-        return output
+                end = time.time()
+                time_elapsed = end-start_time
+                # Insert the labels in to database using pymysql
+                from app.utils import time_to_db
+                time_to_db(current_user.id, time_elapsed, dataset)
+                output = html.P(f" Done with dataset {dataset}, Choose the next one.")
+        return output, start_time
 
     @app.callback(
         [Output('datatable', 'selected_rows')],

@@ -72,7 +72,7 @@ class GuidedLearner:
         self.shap_values_train = explainer.shap_values(self.x_train)
         self.shap_values_pool = explainer.shap_values(self.x_pool)
         feature_names = np.array(self.tfid.get_feature_names())  # len(feature_names) = #cols in shap_values_pool
-        shap.summary_plot(self.shap_values_pool, self.x_pool, feature_names=feature_names)
+        #shap.summary_plot(self.shap_values_pool, self.x_pool, feature_names=feature_names)
 
     def get_keywords(self):
         feature_names = np.array(self.tfid.get_feature_names())  # len(feature_names) = #cols in shap_values_pool
@@ -151,8 +151,8 @@ class GuidedLearner:
                                    ))
             collect[cluster_id] = self.df_pool['text'].values[cluster_indices]
 
-        fig = go.Figure(data=data)
-        fig.show()
+        # fig = go.Figure(data=data)
+        # fig.show()
         df_final_labels.reset_index(drop=True, inplace=True)
         df_final_labels["round"] = self.round
         df_final_labels.to_sql(f"{self.dataset}_cluster", con=self.engine, if_exists="replace")
