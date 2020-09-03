@@ -11,6 +11,9 @@ class Trainer:
     def init_train(self):
         """Initial training of the dataset using guided learner"""
         df = pd.read_csv(f"datasets/{self.dataset}.csv")
+        print(df.shape)
+        df.drop_duplicates(subset=['text'], inplace=True)
+        print(df.shape)
 
         indices = np.random.randint(low=0, high=df.shape[0], size=df.shape[0])
         train_indices = indices[0:round(0.5 * df.shape[0])]

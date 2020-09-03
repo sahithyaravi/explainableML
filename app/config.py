@@ -9,10 +9,16 @@ class Config(object):
     # read this from JSON
     PASSWORD = '1993sahi11'
     #DATABASE_URL = f"mysql+pymysql://root:{PASSWORD}@localhost/shapely"
+    SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
+    username="sahithya",
+    password="1993sahi11",
+    hostname="sahithya.mysql.pythonanywhere-services.com",
+    databasename="sahithya$shapely")
 
-    DATABASE_URL = f"mysql+pymysql://sahithya:{PASSWORD}@sahithya.mysql.pythonanywhere-services.com/sahithya$shapely" #PYTHON ANYWHERE
-    SQLALCHEMY_DATABASE_URI = DATABASE_URL or \
-                              'sqlite:///' + os.path.join(basedir, 'app.db')
+    SQLALCHEMY_POOL_RECYCLE = 299
+
+    # SQLALCHEMY_DATABASE_URI = DATABASE_URL or \
+    #                           'sqlite:///' + os.path.join(basedir, 'app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = 'abcd'
 
