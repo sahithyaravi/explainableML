@@ -14,8 +14,8 @@ top_bar = html.Div(html.Div([html.A(brand_name),
 
 
 choose_dataset = dcc.Dropdown(id='select_dataset',
-                              options=[{'label': 'davidson', 'value': 'davidson_dataset'},
-                                        {'label': 'davidson_noshap', 'value': 'davidson_noshap'},
+                              options=[{'label': 'davidson', 'value': 'davidson_dataset_cluster'},
+                                       {'label': 'davidson_noshap', 'value': 'davidson_dataset_noshap'},
                                        # {'label': 'founta', 'value': 'founta_dataset'},
                                        # {'label': 'gao', 'value': 'gao_dataset'},
                                        # {'label': 'waseem', 'value': 'waseem_dataset'},
@@ -34,7 +34,7 @@ url = dcc.Location(id='url')
 
 ###################
 next_button = html.Button('NEXT', id='next_round', autoFocus=True,
-                          style={'color': 'white', 'background-color': 'green'})
+                          style={'color': 'white', 'background-color': 'green', 'marginLeft': '100px'})
 radio_label = dcc.RadioItems(
     id='radio_label',
     options=[
@@ -62,6 +62,7 @@ layout = html.Div(
         # TOP BAR AND BANNER
         url,
         top_bar,
+
         html.Div(
             className='control-section',
             children=[
@@ -78,10 +79,11 @@ layout = html.Div(
 
              ]),
 
+        html.Div(id='info', style={'marginLeft': "50px", 'width': '60%'}),
         dummy_table,
         dcc.Store(id='store_clicks'),
         queries,
-        radio_label,
+        # radio_label,
         next_button,
         stop_watch,
     ],  style={"fontFamily": font, 'verticalAlign': 'middle'})

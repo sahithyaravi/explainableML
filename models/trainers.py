@@ -13,15 +13,18 @@ class Trainer:
         df = pd.read_csv(f"datasets/{self.dataset}.csv")
 
         indices = np.random.randint(low=0, high=df.shape[0], size=df.shape[0])
-        train_indices = indices[0:round(0.3 * df.shape[0])]
-        test_indices = indices[round(0.3 * df.shape[0]): round(0.6 * df.shape[0])]
-        pool_indices = indices[round(0.6 * df.shape[0]): round(0.8 * df.shape[0])]
-        individual_indices = indices[round(0.8 * df.shape[0]):]
+        train_indices = indices[0:round(0.5 * df.shape[0])]
+        test_indices = indices[round(0.5 * df.shape[0]): round(0.8 * df.shape[0])]
+        pool_indices = indices[round(0.8 * df.shape[0]): round(0.9 * df.shape[0])]
+        individual_indices = indices[round(0.9 * df.shape[0]):]
 
         df_train = df.iloc[train_indices]
         df_test = df.iloc[test_indices]
         df_pool = df.iloc[pool_indices]
         df_individual = df.iloc[individual_indices]
+        df_individual.reset_index(inplace=True)
+        df_individual.drop("index", inplace=True, axis=1)
+        df_individual.reset_index(inplace=True)
 
         learner = GuidedLearner(df_train, df_test, df_pool, df_individual, self.dataset, 1)
         learner.fit_svc(max_iter=2000, C=1, kernel='linear')

@@ -21,7 +21,7 @@ def write_to_db(df, dataset):
 
 def fetch_all_unlabelled_data(dataset):
     database_url = Config.SQLALCHEMY_DATABASE_URI
-    df = pd.read_sql_table(f"{dataset}_cluster", database_url)
+    df = pd.read_sql_table(dataset, database_url)
     return df
 
 

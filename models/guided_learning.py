@@ -19,7 +19,18 @@ from sqlalchemy import create_engine
 
 class GuidedLearner:
     def __init__(self, df_train, df_test, df_pool, df_individual, dataset, round):
+        print(df_individual.head())
+        n_individual_rows = df_individual.shape[0]
+        ids = []
+        j = 0
+        for i in range(0, n_individual_rows, 10):
+            ids.extend([j]*10)
+            j += 1
+        ids = ids[:n_individual_rows]
+        print(len(ids), n_individual_rows)
+        df_individual["cluster_id"] = ids
         self.round = round
+        df_individual["round"] = self.round
         self.df_train = df_train
         self.df_test = df_test
         self.df_pool = df_pool
@@ -46,6 +57,9 @@ class GuidedLearner:
                              index=False)
         self.df_test.to_sql(f"{self.dataset}_test", con=self.engine, if_exists="replace",
                             index=False)
+        df_individual.to_sql(f"{self.dataset}_noshap", con=self.engine, if_exists="replace",
+                             index=False
+                             )
 
     def fit_svc(self, max_iter, C, kernel):
         self.model = SVC(max_iter=max_iter, C=C, kernel=kernel)
