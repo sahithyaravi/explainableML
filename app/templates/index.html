@@ -8,8 +8,8 @@
   <h1>Welcome to GuidedML </h1>
     <p> Please <a href="{{ url_for('login') }}"> <strong>Login</strong></a> to continue ></p>
 {% else  %}
-  <h1>Welcome to GuidedML, {{ current_user.username }}! </h1>
-    <a href="{{ '/dashboard'}}" class="btn">  Start labelling </a>
+  <h1>Welcome to GuidedML, {{ current_user.username }}!</h1>
+    <a href="{{ '/dashboard'}}" class="btn">  Start experiment </a>
 
 {% endif %}
     </div>

@@ -120,7 +120,8 @@ def register_callbacks(app):
                 # Insert the labels in to database using pymysql
                 from app.utils import time_to_db
                 time_to_db(current_user.id, time_elapsed, dataset)
-                output = html.P(f" Done with dataset {dataset}, Choose the next one.")
+                output = html.P(f" Great! Done with this dataset."
+                                f"Select the next dataset for labelling.", style={'marginLeft': '50px'})
         return output, start_time
 
     @app.callback(

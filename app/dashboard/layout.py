@@ -16,8 +16,8 @@ top_bar = html.Div(html.Div([html.A(brand_name),
 
 
 choose_dataset = dcc.Dropdown(id='select_dataset',
-                              options=[{'label': 'davidson', 'value': 'davidson_dataset_cluster'},
-                                       {'label': 'davidson_noshap', 'value': 'davidson_dataset_noshap'},
+                              options=[{'label': 'davidson_guided', 'value': 'davidson_dataset_cluster'},
+                                       {'label': 'davidson_not_guided', 'value': 'davidson_dataset_noshap'},
                                        # {'label': 'founta', 'value': 'founta_dataset'},
                                        # {'label': 'gao', 'value': 'gao_dataset'},
                                        # {'label': 'waseem', 'value': 'waseem_dataset'},

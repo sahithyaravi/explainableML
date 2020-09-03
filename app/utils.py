@@ -70,5 +70,3 @@ def get_labelled_data(dataset_name):
     return df
 
 
-
-clear_labels()

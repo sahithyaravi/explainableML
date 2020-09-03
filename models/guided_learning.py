@@ -50,7 +50,8 @@ class GuidedLearner:
         self.key_words_neg = None
         self.key_words = None
         PASSWORD = '1993sahi11'
-        database_url = f"mysql+pymysql://root:{PASSWORD}@localhost/shapely"
+        # database_url = f"mysql+pymysql://root:{PASSWORD}@localhost/shapely"
+        database_url = f"mysql+pymysql://sahithya:{PASSWORD}@sahithya.mysql.pythonanywhere-services.com/sahithya$shapely"  # PYTHON ANYWHERE
         SQLALCHEMY_DATABASE_URI = database_url
         self.engine = create_engine(SQLALCHEMY_DATABASE_URI, echo=False)
         self.df_train.to_sql(f"{self.dataset}_train", con=self.engine, if_exists="replace",
