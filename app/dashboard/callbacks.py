@@ -203,7 +203,7 @@ def create_table(df):
                     "fontFamily": "Nutino Sans", 'textOverflow': 'ellipsis', "fontSize": 14},
         style_table={'minHeight': '400px',
                      'maxWidth': '1000px',
-                     'maxHeight': '600px',
+                     'maxHeight': '800px',
                      'overflowY': 'scroll',
                      'overflowX': 'scroll',
                      'marginBottom': '50px',
