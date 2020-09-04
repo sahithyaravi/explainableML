@@ -40,6 +40,8 @@ def register_callbacks(app):
         logging.info(f"{dataset}")
         next = ""
         if clicks is not None and clicks > stored_clicks and dataset is not None:
+            user_file = pd.DataFrame()
+            user_file.to_pickle(f"{current_user.id}_{dataset}.pkl")
             if dataset == "davidson_dataset_cluster":
                 text = dcc.Markdown('''
                 * For this experiment, you will be presented groups of sentences.
@@ -118,8 +120,12 @@ def register_callbacks(app):
                 end = time.time()
                 time_elapsed = end-start_time
                 # Insert the labels in to database using pymysql
-                from app.utils import time_to_db
+                from app.utils import time_to_db, write_to_db_pkl
+                labelled_df = pd.read_pickle(f"{current_user.id}_{dataset}.pkl")
+                write_to_db_pkl(labelled_df, dataset=dataset)
                 time_to_db(current_user.id, time_elapsed, dataset)
+                import os
+                os.remove(f"{current_user.id}_{dataset}.pkl")
                 output = html.P(f" Great! Done with this dataset."
                                 f"Select the next dataset for labelling.", style={'marginLeft': '50px'})
         return output, start_time
@@ -151,16 +157,18 @@ def fetch_queries(dataset, next_round, selected_rows):
     df = pd.read_pickle(f"{dataset}queries.pkl")
     round = df["round"].iloc[0]
 
-    from ..utils import get_labelled_indices
+    from ..utils import get_labelled_indices,get_labelled_indices_pkl
 
     # Get all labelled indices of the user
-    labelled_indices = get_labelled_indices(dataset, current_user.id, round)
+    labelled_indices = get_labelled_indices_pkl(dataset, current_user.id, round)
     # extract unlabelled df from whole df
     df_unlabelled = df[~df["index"].isin(labelled_indices)]
+    if df_unlabelled.empty:
+        return ""
     # find minimum unlabelled cluster, this would be the cluster we got labels for
     curr_cluster = df_unlabelled["cluster_id"].min()
-    logging.info(f" Writing labels for cluster {curr_cluster} to db")
-    next_cluster = curr_cluster # for first round
+    logging.info(f" Writing labels for cluster {curr_cluster} ")
+    next_cluster = curr_cluster  # for first round
 
     if next_round > 1:
 
@@ -172,8 +180,8 @@ def fetch_queries(dataset, next_round, selected_rows):
             labelled_df[labelled_df['index'].isin(selected_rows)]["label"] = 1
 
         # Insert the labels in to database using pymysql
-        from app.utils import write_to_db
-        write_to_db(labelled_df, dataset=dataset)
+        from app.utils import write_to_db, write_to_pkl
+        write_to_pkl(labelled_df, dataset=dataset)
         df_unlabelled = df_unlabelled[~df_unlabelled["index"].isin(labelled_df['index'].values)]
         next_cluster = df_unlabelled["cluster_id"].min()
     queries = df[df["cluster_id"] == next_cluster]

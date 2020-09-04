@@ -70,3 +70,37 @@ def get_labelled_data(dataset_name):
     return df
 
 
+def get_labelled_indices_pkl(dataset, user, rnd):
+    labelled_df = pd.read_pickle(f"{current_user.id}_{dataset}.pkl")
+    if not labelled_df.empty:
+        query_indices = labelled_df['row_id'].values
+    else:
+        query_indices = []
+    return query_indices
+
+
+def write_to_pkl(df, dataset):
+    logging.info(f"writing user labels to pkl {current_user.username}")
+    new_df = pd.DataFrame()
+    new_df["dataset"] = dataset
+    new_df["user_id"] = current_user.id
+    new_df["row_id"] = df["index"].values
+    new_df["batch"] = df["cluster_id"].values
+    new_df["label"] = df["label"].values
+    new_df["round"] = df["round"].values
+    labelled_df = pd.read_pickle(f"{current_user.id}_{dataset}.pkl")
+    bigdata = labelled_df.append(new_df, ignore_index=True)
+    bigdata.to_pickle(f"{current_user.id}_{dataset}.pkl")
+
+
+def write_to_db_pkl(df, dataset):
+    logging.info(f"writing user labels to db {current_user.username}")
+    for index, row in df.iterrows():
+        label = Labels(dataset=dataset,
+                       user_id=current_user.id,
+                       row_id=index,
+                       batch=row["batch"],
+                       label=row["label"],
+                       round=row["round"])
+        db.session.add(label)
+        db.session.commit()
