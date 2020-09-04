@@ -23,8 +23,8 @@ class GuidedLearner:
         n_individual_rows = df_individual.shape[0]
         ids = []
         j = 0
-        for i in range(0, n_individual_rows, 10):
-            ids.extend([j]*10)
+        for i in range(0, n_individual_rows, 15):
+            ids.extend([j]*15)
             j += 1
         ids = ids[:n_individual_rows]
         print(len(ids), n_individual_rows)
