@@ -3,12 +3,13 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 import nltk
 from nltk.corpus import stopwords
-from sklearn.linear_model import LogisticRegression
+
 from sklearn.svm import SVC
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 import plotly
 import plotly.graph_objs as go
 from sklearn.manifold import TSNE
-from sklearn.metrics import f1_score, confusion_matrix, accuracy_score
+from sklearn.metrics import f1_score, confusion_matrix, accuracy_score, homogeneity_score
 import seaborn as sns
 import shap
 from sklearn.cluster import KMeans
@@ -36,12 +37,12 @@ class GuidedLearner:
         self.df_pool = df_pool
         self.dataset = dataset
         self.tfid = TfidfVectorizer(max_features=5000)
-        self.tfid.fit(self.df_train['text'].values)
-        self.x_train = self.tfid.transform(self.df_train['text'].values).toarray()
+        self.tfid.fit(self.df_train['processed'].values)
+        self.x_train = self.tfid.transform(self.df_train['processed'].values).toarray()
         self.y_train = self.df_train['label'].values
-        self.x_test = self.tfid.transform(self.df_test['text'].values).toarray()
+        self.x_test = self.tfid.transform(self.df_test['processed'].values).toarray()
         self.y_test = self.df_test['label'].values
-        self.x_pool = self.tfid.transform(self.df_pool['text'].values).toarray()
+        self.x_pool = self.tfid.transform(self.df_pool['processed'].values).toarray()
         self.y_pool = self.df_pool['label'].values
         self.model = None
         self.shap_values_train = None
@@ -50,8 +51,8 @@ class GuidedLearner:
         self.key_words_neg = None
         self.key_words = None
         PASSWORD = '1993sahi11'
-        # database_url = f"mysql+pymysql://root:{PASSWORD}@localhost/shapely"
-        database_url = f"mysql+pymysql://sahithya:{PASSWORD}@sahithya.mysql.pythonanywhere-services.com/sahithya$shapely"  # PYTHON ANYWHERE
+        database_url = f"mysql+pymysql://root:{PASSWORD}@localhost/shapely"
+        # database_url = f"mysql+pymysql://sahithya:{PASSWORD}@sahithya.mysql.pythonanywhere-services.com/sahithya$shapely"  # PYTHON ANYWHERE
         SQLALCHEMY_DATABASE_URI = database_url
         self.engine = create_engine(SQLALCHEMY_DATABASE_URI, echo=False)
         self.df_train.to_sql(f"{self.dataset}_train", con=self.engine, if_exists="replace",
@@ -63,19 +64,39 @@ class GuidedLearner:
                              )
 
     def fit_svc(self, max_iter, C, kernel):
-        self.model = SVC(max_iter=max_iter, C=C, kernel=kernel)
+        self.model = SVC(max_iter=max_iter, C=C, kernel=kernel, probability=True)
         self.model.fit(self.x_train, self.y_train)
-        self.model.score(self.x_train, self.y_train)
-
-    def get_shap_values(self):
+        print("train score", self.model.score(self.x_train, self.y_train))
+        pred = self.model.predict(self.x_test)
+        print("Confusion matrix ", confusion_matrix(self.y_test, pred))
+        print("Accuracy ", accuracy_score(self.y_test, pred))
+        pred = self.model.predict(self.x_pool)
+        print("Confusion matrix POOL ", confusion_matrix(self.y_pool, pred))
+        print("Accuracy POOL", accuracy_score(self.y_pool, pred))
         explainer = shap.LinearExplainer(self.model, self.x_train, feature_dependence="independent")
         # TODO extract feature importance value of each feature
         self.shap_values_train = explainer.shap_values(self.x_train)
         self.shap_values_pool = explainer.shap_values(self.x_pool)
         feature_names = np.array(self.tfid.get_feature_names())  # len(feature_names) = #cols in shap_values_pool
-        #shap.summary_plot(self.shap_values_pool, self.x_pool, feature_names=feature_names)
+        shap.summary_plot(self.shap_values_train, self.x_train, feature_names=feature_names)
+
+    def fit_tree(self):
+        self.model = RandomForestClassifier(n_jobs=-1, n_estimators=100, max_features="auto")
+        self.model.fit(self.x_train, self.y_train)
+        print("train score", self.model.score(self.x_train, self.y_train))
+        pred = self.model.predict(self.x_test)
+        print("Confusion matrix ", confusion_matrix(self.y_test, pred))
+        print("Accuracy ", accuracy_score(self.y_test, pred))
+        explainer = shap.TreeExplainer(self.model, self.x_train, feature_dependence="independent")
+        # TODO extract feature importance value of each feature
+        self.shap_values_train = explainer.shap_values(self.x_train)
+        self.shap_values_pool = explainer.shap_values(self.x_pool)
+
+        feature_names = np.array(self.tfid.get_feature_names())  # len(feature_names) = #cols in shap_values_pool
+        shap.summary_plot(self.shap_values_pool, self.x_pool, feature_names=feature_names)
 
     def get_keywords(self):
+        print(len(self.shap_values_pool))
         feature_names = np.array(self.tfid.get_feature_names())  # len(feature_names) = #cols in shap_values_pool
         arr = self.shap_values_pool.copy()
         arr[arr == 0] = np.nan
@@ -93,6 +114,7 @@ class GuidedLearner:
     def cluster_data_pool(self, n_clusters):
         kmeans = KMeans(n_clusters=n_clusters, n_jobs=-1, max_iter=600)
         kmeans.fit(self.shap_values_pool)
+        print("Homogenity score", homogeneity_score(self.y_pool, kmeans.labels_))
         similarity_to_center = []
         for i, instance in enumerate(self.shap_values_pool):
             cluster_label = kmeans.labels_[i]  # cluster of this instance
@@ -152,8 +174,8 @@ class GuidedLearner:
                                    ))
             collect[cluster_id] = self.df_pool['text'].values[cluster_indices]
 
-        # fig = go.Figure(data=data)
-        # fig.show()
+        fig = go.Figure(data=data)
+        fig.show()
         df_final_labels.reset_index(drop=True, inplace=True)
         df_final_labels["round"] = self.round
         df_final_labels.to_sql(f"{self.dataset}_cluster", con=self.engine, if_exists="replace")

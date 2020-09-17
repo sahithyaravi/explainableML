@@ -41,7 +41,8 @@ def register_callbacks(app):
         next = ""
         if clicks is not None and clicks > stored_clicks and dataset is not None:
             user_file = pd.DataFrame()
-            user_file.to_pickle(f"{current_user.id}_{dataset}.pkl")
+            if not os.path.exists(f"{current_user.id}_{dataset}.pkl"):
+                user_file.to_pickle(f"{current_user.id}_{dataset}.pkl")
             if dataset == "davidson_dataset_cluster":
                 text = dcc.Markdown('''
                 * For this experiment, you will be presented groups of sentences.
@@ -123,9 +124,9 @@ def register_callbacks(app):
                 from app.utils import time_to_db, write_to_db_pkl
                 labelled_df = pd.read_pickle(f"{current_user.id}_{dataset}.pkl")
                 write_to_db_pkl(labelled_df, dataset=dataset)
-                time_to_db(current_user.id, time_elapsed, dataset)
                 import os
                 os.remove(f"{current_user.id}_{dataset}.pkl")
+                time_to_db(current_user.id, time_elapsed, dataset)
                 output = html.P(f" Great! Done with this dataset."
                                 f"Select the next dataset for labelling.", style={'marginLeft': '50px'})
         return output, start_time
@@ -156,7 +157,7 @@ def fetch_queries(dataset, next_round, selected_rows):
     logging.debug(f"directory{os.curdir}")
     df = pd.read_pickle(f"{dataset}queries.pkl")
     round = df["round"].iloc[0]
-
+    max_cluster = df["cluster_id"].max()
     from ..utils import get_labelled_indices,get_labelled_indices_pkl
 
     # Get all labelled indices of the user

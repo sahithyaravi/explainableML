@@ -11,6 +11,8 @@ class Trainer:
     def init_train(self):
         """Initial training of the dataset using guided learner"""
         df = pd.read_csv(f"datasets/{self.dataset}.csv")
+        df = df.sample(100)
+        df.columns = ['index','text', 'label', 'processed']
         print(df.shape)
         df.drop_duplicates(subset=['text'], inplace=True)
         print(df.shape)
@@ -30,10 +32,11 @@ class Trainer:
         df_individual.reset_index(inplace=True)
 
         learner = GuidedLearner(df_train, df_test, df_pool, df_individual, self.dataset, 1)
-        learner.fit_svc(max_iter=2000, C=1, kernel='linear')
-        learner.get_shap_values()
-        learner.get_keywords()
-        learner.cluster_data_pool(n_clusters=20)
+        learner.fit_svc(max_iter=1000, C=5, kernel='linear')
+        #learner.fit_MLP()
+        #learner.fit_tree()
+        # learner.get_keywords()
+        # learner.cluster_data_pool(n_clusters=10)
 
     def retrain(self):
         r = Retrainer(self.dataset)
