@@ -1,0 +1,3 @@
+SETUP = "local"  # web
+PASSWORD = " "
+

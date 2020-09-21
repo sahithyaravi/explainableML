@@ -16,7 +16,7 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from scipy.spatial.distance import euclidean, cosine
 from sqlalchemy import create_engine
-
+from app.config import Config
 
 class GuidedLearner:
     def __init__(self, df_train, df_test, df_pool, df_individual, dataset, round):
@@ -50,10 +50,7 @@ class GuidedLearner:
         self.key_words_pos = None
         self.key_words_neg = None
         self.key_words = None
-        PASSWORD = '1993sahi11'
-        database_url = f"mysql+pymysql://root:{PASSWORD}@localhost/shapely"
-        # database_url = f"mysql+pymysql://sahithya:{PASSWORD}@sahithya.mysql.pythonanywhere-services.com/sahithya$shapely"  # PYTHON ANYWHERE
-        SQLALCHEMY_DATABASE_URI = database_url
+        SQLALCHEMY_DATABASE_URI = Config.SQLALCHEMY_DATABASE_URI
         self.engine = create_engine(SQLALCHEMY_DATABASE_URI, echo=False)
         self.df_train.to_sql(f"{self.dataset}_train", con=self.engine, if_exists="replace",
                              index=False)
