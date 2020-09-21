@@ -22,7 +22,7 @@ def register_dashapps(app):
     })
 
     with app.app_context():
-        dashapp.title = 'Dashapp'
+        dashapp.title = 'GuidedML'
         dashapp.layout = serve_layout
         register_callbacks(dashapp)
 

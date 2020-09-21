@@ -41,13 +41,13 @@ def register_callbacks(app):
         next = ""
         if clicks is not None and clicks > stored_clicks and dataset is not None:
             user_file = pd.DataFrame()
-            if not os.path.exists(f"{current_user.id}_{dataset}.pkl"):
-                user_file.to_pickle(f"{current_user.id}_{dataset}.pkl")
+            if not os.path.exists(f"{current_user.id}_{dataset}_user.pkl"):
+                user_file.to_pickle(f"{current_user.id}_{dataset}_user.pkl")
             if dataset == "davidson_dataset_cluster":
                 text = dcc.Markdown('''
                 * For this experiment, you will be presented groups of sentences.
                 * Select the sentences in the group which contain **hate-speech***.
-                * **Similar** sentences are present within the group. So it is possible to label all sentences by 
+                * **Similar** sentences are present within the group. So it is possible to label all sentences by
                 looking at 1-2 samples in the group.
                 * Important words may be highlighted in **bold**
                 * Click next to continue.
@@ -107,7 +107,8 @@ def register_callbacks(app):
                     out = row["text"]
                 table_text.append(out)
             if table_text:
-                note = html.H3("Use select all checkbox if all sentences in the group are hate speech", style={'marginLeft': '50px'})
+                note = dcc.Markdown(''' * Use **select all checkbox** if all sentences in the group are hate speech''',
+                style={'marginLeft': '50px'})
                 checkall = dcc.Checklist(options=
                                          [{'label': 'select/unselect all', 'value': 'all'},
                                           ],
@@ -122,11 +123,12 @@ def register_callbacks(app):
                 time_elapsed = end-start_time
                 # Insert the labels in to database using pymysql
                 from app.utils import time_to_db, write_to_db_pkl
-                labelled_df = pd.read_pickle(f"{current_user.id}_{dataset}.pkl")
-                write_to_db_pkl(labelled_df, dataset=dataset)
-                import os
-                os.remove(f"{current_user.id}_{dataset}.pkl")
+
                 time_to_db(current_user.id, time_elapsed, dataset)
+                # import os
+                # labelled_df = pd.read_pickle(f"{current_user.id}_{dataset}.pkl")
+                # write_to_db_pkl(labelled_df, dataset=dataset)
+                # os.remove(f"{current_user.id}_{dataset}.pkl")
                 output = html.P(f" Great! Done with this dataset."
                                 f"Select the next dataset for labelling.", style={'marginLeft': '50px'})
         return output, start_time
@@ -157,7 +159,7 @@ def fetch_queries(dataset, next_round, selected_rows):
     logging.debug(f"directory{os.curdir}")
     df = pd.read_pickle(f"{dataset}queries.pkl")
     round = df["round"].iloc[0]
-    max_cluster = df["cluster_id"].max()
+
     from ..utils import get_labelled_indices,get_labelled_indices_pkl
 
     # Get all labelled indices of the user
