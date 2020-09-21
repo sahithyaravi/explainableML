@@ -73,7 +73,7 @@ class GuidedLearner:
         pred = self.model.predict(self.x_pool)
         print("Confusion matrix POOL ", confusion_matrix(self.y_pool, pred))
         print("Accuracy POOL", accuracy_score(self.y_pool, pred))
-        explainer = shap.LinearExplainer(self.model, self.x_train, feature_dependence="independent")
+        explainer = shap.LinearExplainer(self.model, self.x_train, feature_perturbation="independent")
         # TODO extract feature importance value of each feature
         self.shap_values_train = explainer.shap_values(self.x_train)
         self.shap_values_pool = explainer.shap_values(self.x_pool)
@@ -81,22 +81,40 @@ class GuidedLearner:
         shap.summary_plot(self.shap_values_train, self.x_train, feature_names=feature_names)
 
     def fit_tree(self):
-        self.model = RandomForestClassifier(n_jobs=-1, n_estimators=100, max_features="auto")
-        self.model.fit(self.x_train, self.y_train)
-        print("train score", self.model.score(self.x_train, self.y_train))
-        pred = self.model.predict(self.x_test)
-        print("Confusion matrix ", confusion_matrix(self.y_test, pred))
-        print("Accuracy ", accuracy_score(self.y_test, pred))
-        explainer = shap.TreeExplainer(self.model, self.x_train, feature_dependence="independent")
+        estimators = [100, 500, 1000, 1500, 2000, 5000]
+        features = ['auto', 0.8, 'sqrt']
+        max_depth = [20, 30, 50, 100, None]
+        best_model = None
+        max_score = 0
+        for e in estimators:
+            for f in features:
+                for m in max_depth:
+                    self.model = GradientBoostingClassifier(n_estimators=e, max_features=f, max_depth=m)
+                    self.model.fit(self.x_train, self.y_train)
+                    print("Score on train set", self.model.score(self.x_train, self.y_train))
+                    pred = self.model.predict(self.x_test)
+                    print("Confusion matrix ", confusion_matrix(self.y_test, pred))
+                    s = accuracy_score(self.y_test, pred)
+                    print("Accuracy on test set ", s)
+                    if s > max_score:
+                        max_score = s
+                        best_model = self.model
+        print("BEST MODEL", best_model.n_estimators, best_model.max_features, best_model.max_depth)
+        self.model = best_model
+        pred = self.model.predict(self.x_pool)
+        print("Confusion matrix POOL ", confusion_matrix(self.y_pool, pred))
+        print("Accuracy POOL", accuracy_score(self.y_pool, pred))
+
+        explainer = shap.TreeExplainer(self.model, self.x_train)
         # TODO extract feature importance value of each feature
         self.shap_values_train = explainer.shap_values(self.x_train)
         self.shap_values_pool = explainer.shap_values(self.x_pool)
-
         feature_names = np.array(self.tfid.get_feature_names())  # len(feature_names) = #cols in shap_values_pool
         shap.summary_plot(self.shap_values_pool, self.x_pool, feature_names=feature_names)
+        self.shap_values_pool = self.shap_values_pool
 
     def get_keywords(self):
-        print(len(self.shap_values_pool))
+        print("shap values", len(self.shap_values_pool))
         feature_names = np.array(self.tfid.get_feature_names())  # len(feature_names) = #cols in shap_values_pool
         arr = self.shap_values_pool.copy()
         arr[arr == 0] = np.nan
