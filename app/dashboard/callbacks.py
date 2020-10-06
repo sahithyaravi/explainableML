@@ -54,6 +54,26 @@ def register_callbacks(app):
                 ''')
                 next = html.Button('NEXT', id='next_round', autoFocus=True,
                                    style={'color': 'white', 'background-color': 'green', 'marginLeft': '100px'})
+            elif dataset == "yelp_dataset_cluster":
+                text = dcc.Markdown('''
+                           * For this experiment, you will be presented groups of sentences.
+                           * Select the sentences in the group which contain **positive review***.
+                           * **Similar** sentences are present within the group. So it is possible to label all sentences by
+                           looking at 1-2 samples in the group.
+                           * Important words may be highlighted in **bold**
+                           * Click next to continue.
+                           ''')
+                next = html.Button('NEXT', id='next_round', autoFocus=True,
+                                   style={'color': 'white', 'background-color': 'green', 'marginLeft': '100px'})
+            elif dataset == "yelp_dataset_noshap":
+                text = dcc.Markdown('''
+                * For this experiment, you will be presented a list of sentences.
+                * Select the sentences in the list which contain **positive review**.
+                * **Random/ Dissimilar** sentences are listed together.
+                Click next to continue.
+                           ''')
+                next = html.Button('NEXT', id='next_round', autoFocus=True,
+                                   style={'color': 'white', 'background-color': 'green', 'marginLeft': '100px'})
             else:
                 text = dcc.Markdown('''
                 * For this experiment, you will be presented a list of sentences.
@@ -98,11 +118,19 @@ def register_callbacks(app):
                 row["text"] = " " + row["text"] + " "
                 if "keywords" in df.columns:
                     keyword = row["keywords"]
+                    pos = row["positive"]
+                    neg = row["negative"]
+                    out = row["text"]
                     if keyword is not None and keyword != None:
                         str1 = row["text"].split(row["keywords"])
                         out = f"{str1[0]}**{keyword}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{keyword}**"
-                    else:
-                        out = row["text"]
+                    # if pos is not None and pos != None:
+                    #     str1 = out.split(pos)
+                    #     out = f"{str1[0]}**{pos}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{pos}**"
+                    # if neg is not None and neg!= None:
+                    #     str1 = out.split(neg)
+                    #     out = f"{str1[0]}**{neg}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{neg}**"
+
                 else:
                     out = row["text"]
                 table_text.append(out)

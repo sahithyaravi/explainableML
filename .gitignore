@@ -3,3 +3,8 @@
 flask-cache-dir/
 notebooks/.ipynb_checkpoints/guided_training-SVC-checkpoint.ipynb
 migrations/
+app/run_config.py
+datasets/sentiment/IMDB_50k_kaggle.csv
+datasets/sentiment/yelp_labelled.txt
+datasets/sentiment/imdb_labelled.txt
+datasets/sentiment/amazon_cells_labelled.txt

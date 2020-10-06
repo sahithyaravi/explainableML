@@ -7,7 +7,6 @@ import spacy
 
 
 def lemmetize(doc):
-    print(doc)
     nlp = spacy.load('en')
     sents = nlp(doc)
     doc_new = []
@@ -53,6 +52,7 @@ def remove_stop_words(col):
     stop_words = set(stopwords.words('english'))
     punctuation = list(string.punctuation)
     stop_words.update(punctuation)
+    stop_words.extend(['and', 'here', 'there', 'to', 'at'])
     col_new = []
     for text in col:
         list_of_words = text.split()
@@ -100,36 +100,47 @@ def denoise_text(text):
 ##############################################################
 # IMDB YELP AMAZON 1K
 # https://www.kaggle.com/marklvl/sentiment-labelled-sentences-data-set
-# import pandas as pd
-#
-# filepath_dict = {'yelp':   '../datasets/yelp_labelled.txt',}
-#                  # 'amazon': '../datasets/amazon_cells_labelled.txt',
-#                  # 'imdb':   '../datasets/imdb_labelled.txt'}
-#
-# df_list = []
-# for source, filepath in filepath_dict.items():
-#     df = pd.read_csv(filepath, names=['text', 'label'], sep='\t')
-#     df = lower_case(df)
-#     df['text'] = df['text'].apply(denoise_text)
-#     df = remove_special_chars(df)
-#     print("lemmetize", source)
-#     df['processed'] = df["text"].apply(lemmetize)
-#     # Remove words of length 0-2
-#     # df["processed"] = df['processed'].apply(lambda x: " ".join([word for word in x.split()
-#     #                                                             if len(word) > 3]))
-#     print(df.head())
-#     df.to_csv(f"../datasets/{source}_dataset.csv")
-#
-#
-##############################################################
+import pandas as pd
+
+filepath_dict = {'yelp':   '../datasets/sentiment/yelp_labelled.txt',
+                 #'amazon': '../datasets/sentiment/amazon_cells_labelled.txt',
+                 # 'imdb':   '../datasets/imdb_labelled.txt'}
+                 }
+
+df_list = []
+for source, filepath in filepath_dict.items():
+    df = pd.read_csv(filepath, names=['text', 'label'], sep='\t')
+    df = lower_case(df)
+    df['text'] = df['text'].apply(denoise_text)
+    df = remove_special_chars(df)
+    print("lemmetize", source)
+    df['processed'] = df["text"].apply(lemmetize)
+    # Remove words of length 0-2
+    # df["processed"] = df['processed'].apply(lambda x: " ".join([word for word in x.split()
+    #                                                             if len(word) > 3]))
+    print(df.head())
+    df.to_csv(f"../datasets/{source}_dataset.csv")
+
+
+#############################################################
 
 # Davidson dataset
 # pth = '../datasets/davidson_dataset.csv'
 # df = pd.read_csv(pth)
+# print(df['label'].value_counts())
+# df_non_hate = df[df["label"] == 0]
+# df_non_hate = df_non_hate.sample(1400)
+# df_hate = df[df["label"] == 1]
+# df_out = df_non_hate.append(df_hate, ignore_index=True)
+# df_out.reset_index(drop=True, inplace=True)
+# print(df_non_hate.head)
+# df_out.drop("index", axis=1, inplace=True)
+# df_out.to_csv('bdavidson_dataset.csv')
 # df = lower_case(df)
-# df['text'] = df['text'].apply(denoise_text)
 # df = remove_special_chars(df)
-# df['processed'] = df["text"].apply(lemmetize)
+# df['processed'] = df['text'].apply(denoise_text)
+#
+# # df['processed'] = df["text"].apply(lemmetize)
 # # Remove words of length 0-2
 # # df["processed"] = df['processed'].apply(lambda x: " ".join([word for word in x.split()
 # #                                                             if len(word) > 3]))
@@ -138,37 +149,37 @@ def denoise_text(text):
 
 #########################################
 # YELP HUGE
-pth = '../datasets/huge_yelp.csv'
-df = pd.read_csv(pth)
-df = df[['text', 'stars']]
-
-
-df_good = df[(df["stars"] == 5)]
-
-df_good = df_good.sample(750)
-df_bad = df[(df["stars"] == 1)]
-
-df_final = df_good.append(df_bad)
-
-df_final.stars.replace(5, '1', inplace=True)
-df_final.stars.replace(1, 0, inplace=True)
-df_final.stars.replace('1', 1, inplace=True)
-df_final.columns = ["text", "label"]
-df_final.reset_index(drop=True, inplace=True)
-print(df_final.columns)
-print(df_final.head())
-print(df_final["label"].value_counts())
-df = lower_case(df_final)
-df['text'] = df['text'].apply(denoise_text)
-df = remove_special_chars(df)
-print("lemmetize")
-df['processed'] = df["text"].apply(lemmetize)
-# Remove words of length 0-2
-df["processed"] = df['processed'].apply(lambda x: " ".join([word for word in x.split()
-                                                            if len(word) > 2]))
-print(df.head())
-df_yelp = pd.read_csv('../datasets/yelp_dataset.csv')
-df_combined = df_yelp.append(df, ignore_index=True)
-df_combined.drop_duplicates(inplace=True)
-print(df.shape, df_yelp.shape, df_combined.shape)
-df.to_csv('../datasets/combined_yelp_dataset.csv')
+# pth = '../datasets/huge_yelp.csv'
+# df = pd.read_csv(pth)
+# df = df[['text', 'stars']]
+#
+#
+# df_good = df[(df["stars"] == 5)]
+#
+# df_good = df_good.sample(750)
+# df_bad = df[(df["stars"] == 1)]
+#
+# df_final = df_good.append(df_bad)
+#
+# df_final.stars.replace(5, '1', inplace=True)
+# df_final.stars.replace(1, 0, inplace=True)
+# df_final.stars.replace('1', 1, inplace=True)
+# df_final.columns = ["text", "label"]
+# df_final.reset_index(drop=True, inplace=True)
+# print(df_final.columns)
+# print(df_final.head())
+# print(df_final["label"].value_counts())
+# df = lower_case(df_final)
+# df['text'] = df['text'].apply(denoise_text)
+# df = remove_special_chars(df)
+# print("lemmetize")
+# df['processed'] = df["text"].apply(lemmetize)
+# # Remove words of length 0-2
+# df["processed"] = df['processed'].apply(lambda x: " ".join([word for word in x.split()
+#                                                             if len(word) > 2]))
+# print(df.head())
+# df_yelp = pd.read_csv('../datasets/yelp_dataset.csv')
+# df_combined = df_yelp.append(df, ignore_index=True)
+# df_combined.drop_duplicates(inplace=True)
+# print(df.shape, df_yelp.shape, df_combined.shape)
+# df.to_csv('../datasets/combined_yelp_dataset.csv')
