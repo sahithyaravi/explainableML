@@ -20,6 +20,8 @@ choose_dataset = dcc.Dropdown(id='select_dataset',
                                        {'label': 'davidson_not_guided', 'value': 'davidson_dataset_noshap'},
                                        {'label': 'yelp_guided', 'value': 'yelp_dataset_cluster'},
                                        {'label': 'yelp_not_guided', 'value': 'yelp_dataset_noshap'},
+                                       {'label': 'bank_guided', 'value': 'bank_dataset_cluster'},
+
                                        # {'label': 'founta', 'value': 'founta_dataset'},
                                        # {'label': 'gao', 'value': 'gao_dataset'},
                                        # {'label': 'waseem', 'value': 'waseem_dataset'},

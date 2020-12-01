@@ -54,7 +54,7 @@ def register_callbacks(app):
                 ''')
                 next = html.Button('NEXT', id='next_round', autoFocus=True,
                                    style={'color': 'white', 'background-color': 'green', 'marginLeft': '100px'})
-            elif dataset == "yelp_dataset_cluster":
+            elif dataset == "yelp_dataset_cluster" or dataset=="bank_dataset_cluster":
                 text = dcc.Markdown('''
                            * For this experiment, you will be presented groups of sentences.
                            * Select the sentences in the group which contain **positive review***.
@@ -113,6 +113,7 @@ def register_callbacks(app):
                 logging.debug("Updating labels for next round", next_round-1)
 
             df = fetch_queries(dataset, next_round, selected_rows)
+
             table_text = []
             for index, row in df.iterrows():
                 row["text"] = " " + row["text"] + " "
@@ -230,10 +231,11 @@ def create_table(df):
         selected_rows=[],
         id='datatable',
         style_header={'backgroundColor': 'white', 'fontWeight': 'bold', 'display':'none'},
-        style_cell={'textAlign': 'left', 'backgroundColor': 'white',
-                    "fontFamily": "Nutino Sans", 'textOverflow': 'ellipsis', "fontSize": 14},
+        style_cell={'textAlign': 'left', 'backgroundColor': 'white', 'height':'auto',
+                    'whiteSpace': 'normal',
+                    "fontFamily": "Nutino Sans",  "fontSize": 16},
         style_table={'minHeight': '400px',
-                     'maxWidth': '1000px',
+                     'maxWidth': '1200px',
                      'maxHeight': '800px',
                      'overflowY': 'scroll',
                      'overflowX': 'scroll',

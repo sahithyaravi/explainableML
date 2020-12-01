@@ -8,3 +8,9 @@ datasets/sentiment/IMDB_50k_kaggle.csv
 datasets/sentiment/yelp_labelled.txt
 datasets/sentiment/imdb_labelled.txt
 datasets/sentiment/amazon_cells_labelled.txt
+notebooks/.ipynb_checkpoints/kernel-checkpoint.ipynb
+notebooks/.ipynb_checkpoints/guided_training-yelp-checkpoint.ipynb
+notebooks/.ipynb_checkpoints/guided_training-yelp-ML-checkpoint.ipynb
+notebooks/.ipynb_checkpoints/guided_training-checkpoint.ipynb
+notebooks/.ipynb_checkpoints/guided_training-SVC-false-positive-checkpoint.ipynb
+notebooks/.ipynb_checkpoints/Keras LSTM for IMDB Sentiment Classification-checkpoint.ipynb

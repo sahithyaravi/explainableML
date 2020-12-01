@@ -24,20 +24,20 @@ def lower_case(df):
     return df
 
 
-def remove_special_chars(df):
+def remove_special_chars(df, col='text'):
     """
 
     :param df: input df with 'text' column
     :return: df with special chars removed from text column
     """
     # Remove url
-    df['text'] = [re.sub(r"http\S+", " ", text) for text in df["text"]]
+    df[col] = [re.sub(r"http\S+", " ", text) for text in df[col]]
 
     # Remove special chars and numbers
-    df['text'] = df['text'].str.replace("[^a-zA-Z#]", " ")
+    df[col] = df[col].str.replace("[^a-zA-Z#]", " ")
 
-    df["text"] = [re.sub(r"\b[A-Z\.]{2,}s?\b", "", text) for text in df["text"]]
-    df["text"] = [re.sub('\S*@\S*\s?', ' ', text) for text in df["text"]]
+    df[col] = [re.sub(r"\b[A-Z\.]{2,}s?\b", "", text) for text in df[col]]
+    df[col] = [re.sub('\S*@\S*\s?', ' ', text) for text in df[col]]
     # df["len"] = df["text"].str.len()
     return df
 
@@ -79,107 +79,124 @@ def denoise_text(text):
     return text
 
 ##############################################################
+
+
+dataset = "bank"
+
+# bank
+if dataset == "bank":
+    original_path = "BankReviews.xlsx"
+    path = "../datasets/bank_dataset.csv"
+    df = pd.read_excel(original_path, encoding='windows-1252', sheet_name='BankReviews')
+    print(df.shape, df.label.value_counts())
+    df.label.replace(1, 0, inplace=True)
+    df.label.replace(5, 1, inplace=True)
+    df.dropna(inplace=True)
+    df['processed'] = df['text'].apply(denoise_text)
+    df.drop_duplicates(subset=['processed'], inplace=True, keep='last')
+    print(df.shape, df['label'].value_counts())
+    df = remove_special_chars(df, col='processed')
+    df['processed'] = df["processed"].apply(lemmetize)
+    # Remove words of length 0-2
+    df["processed"] = df['processed'].apply(lambda x: " ".join([word for word in x.split()]))
+    df.to_csv(path)
+
 # IMDB 50K
-# dataset = "50k"
-# original_path = "../datasets/IMDB_50k_kaggle.csv"
-# path = "../datasets/imdb50k_dataset.csv"
-# df = pd.read_csv(original_path)
-# df.columns = ['text', 'label']
-# if dataset == "50k":
-#     df.label.replace("positive", 1, inplace=True)
-#     df.label.replace("negative", 0, inplace=True)
-# df = lower_case(df)
-# df['text'] = df['text'].apply(denoise_text)
-# df = remove_special_chars(df)
-# df['processed'] = df["text"].apply(lemmetize)
-# # Remove words of length 0-2
-# df["processed"] = df['processed'].apply(lambda x: " ".join([word for word in x.split()]))
-# df.to_csv(path)
+if dataset == "50k":
+    original_path = "../datasets/IMDB_50k_kaggle.csv"
+    path = "../datasets/imdb50k_dataset.csv"
+    df = pd.read_csv(original_path)
+    df.columns = ['text', 'label']
+    if dataset == "50k":
+        df.label.replace("positive", 1, inplace=True)
+        df.label.replace("negative", 0, inplace=True)
+    df = lower_case(df)
+    df['text'] = df['text'].apply(denoise_text)
+    df = remove_special_chars(df)
+    df['processed'] = df["text"].apply(lemmetize)
+    # Remove words of length 0-2
+    df["processed"] = df['processed'].apply(lambda x: " ".join([word for word in x.split()]))
+    df.to_csv(path)
 
 
 ##############################################################
 # IMDB YELP AMAZON 1K
 # https://www.kaggle.com/marklvl/sentiment-labelled-sentences-data-set
-import pandas as pd
+if dataset == "yelp":
 
-filepath_dict = {'yelp':   '../datasets/sentiment/yelp_labelled.txt',
-                 #'amazon': '../datasets/sentiment/amazon_cells_labelled.txt',
-                 # 'imdb':   '../datasets/imdb_labelled.txt'}
-                 }
+    filepath_dict = {'yelp':   '../datasets/sentiment/yelp_labelled.txt',
+                     #'amazon': '../datasets/sentiment/amazon_cells_labelled.txt',
+                     # 'imdb':   '../datasets/imdb_labelled.txt'}
+                     }
 
-df_list = []
-for source, filepath in filepath_dict.items():
-    df = pd.read_csv(filepath, names=['text', 'label'], sep='\t')
-    df = lower_case(df)
-    df['text'] = df['text'].apply(denoise_text)
-    df = remove_special_chars(df)
-    print("lemmetize", source)
-    df['processed'] = df["text"].apply(lemmetize)
-    # Remove words of length 0-2
-    # df["processed"] = df['processed'].apply(lambda x: " ".join([word for word in x.split()
-    #                                                             if len(word) > 3]))
-    print(df.head())
-    df.to_csv(f"../datasets/{source}_dataset.csv")
+    df_list = []
+    for source, filepath in filepath_dict.items():
+        df = pd.read_csv(filepath, names=['text', 'label'], sep='\t')
+        df = lower_case(df)
+        df['text'] = df['text'].apply(denoise_text)
+        df = remove_special_chars(df)
+        print("lemmetize", source)
+        df['processed'] = df["text"].apply(lemmetize)
+        # Remove words of length 0-2
+        df["processed"] = df['processed'].apply(lambda x: " ".join([word for word in x.split()
+                                                                    if len(word) > 3]))
+        print(df.head())
+        df.to_csv(f"../datasets/{source}_dataset.csv")
 
 
 #############################################################
 
 # Davidson dataset
-# pth = '../datasets/davidson_dataset.csv'
-# df = pd.read_csv(pth)
-# print(df['label'].value_counts())
-# df_non_hate = df[df["label"] == 0]
-# df_non_hate = df_non_hate.sample(1400)
-# df_hate = df[df["label"] == 1]
-# df_out = df_non_hate.append(df_hate, ignore_index=True)
-# df_out.reset_index(drop=True, inplace=True)
-# print(df_non_hate.head)
-# df_out.drop("index", axis=1, inplace=True)
-# df_out.to_csv('bdavidson_dataset.csv')
-# df = lower_case(df)
-# df = remove_special_chars(df)
-# df['processed'] = df['text'].apply(denoise_text)
-#
-# # df['processed'] = df["text"].apply(lemmetize)
-# # Remove words of length 0-2
-# # df["processed"] = df['processed'].apply(lambda x: " ".join([word for word in x.split()
-# #                                                             if len(word) > 3]))
-# print(df.head())
-# df.to_csv(pth)
+if dataset == "davidson":
+    pth = '../datasets/davidson_dataset.csv'
+    df = pd.read_csv(pth)
+    print(df['label'].value_counts())
+    df_non_hate = df[df["label"] == 0]
+    df_non_hate = df_non_hate.sample(1400)
+    df_hate = df[df["label"] == 1]
+    df_out = df_non_hate.append(df_hate, ignore_index=True)
+    df_out.reset_index(drop=True, inplace=True)
+    print(df_non_hate.head)
+    df_out.drop("index", axis=1, inplace=True)
+    df_out.to_csv('bdavidson_dataset.csv')
+    df = lower_case(df)
+    df = remove_special_chars(df)
+    df['processed'] = df['text'].apply(denoise_text)
+
+    # df['processed'] = df["text"].apply(lemmetize)
+    # Remove words of length 0-2
+    # df["processed"] = df['processed'].apply(lambda x: " ".join([word for word in x.split()
+    #                                                             if len(word) > 3]))
+    print(df.head())
+    df.to_csv(pth)
 
 #########################################
-# YELP HUGE
-# pth = '../datasets/huge_yelp.csv'
-# df = pd.read_csv(pth)
-# df = df[['text', 'stars']]
-#
-#
-# df_good = df[(df["stars"] == 5)]
-#
-# df_good = df_good.sample(750)
-# df_bad = df[(df["stars"] == 1)]
-#
-# df_final = df_good.append(df_bad)
-#
-# df_final.stars.replace(5, '1', inplace=True)
-# df_final.stars.replace(1, 0, inplace=True)
-# df_final.stars.replace('1', 1, inplace=True)
-# df_final.columns = ["text", "label"]
-# df_final.reset_index(drop=True, inplace=True)
-# print(df_final.columns)
-# print(df_final.head())
-# print(df_final["label"].value_counts())
-# df = lower_case(df_final)
-# df['text'] = df['text'].apply(denoise_text)
-# df = remove_special_chars(df)
-# print("lemmetize")
-# df['processed'] = df["text"].apply(lemmetize)
-# # Remove words of length 0-2
-# df["processed"] = df['processed'].apply(lambda x: " ".join([word for word in x.split()
-#                                                             if len(word) > 2]))
-# print(df.head())
-# df_yelp = pd.read_csv('../datasets/yelp_dataset.csv')
-# df_combined = df_yelp.append(df, ignore_index=True)
-# df_combined.drop_duplicates(inplace=True)
-# print(df.shape, df_yelp.shape, df_combined.shape)
-# df.to_csv('../datasets/combined_yelp_dataset.csv')
+# white supremecy dataset
+if dataset == "white":
+    # metadata = pd.read_csv('../hate-speech-dataset/annotations_metadata.csv')
+    # all_files = '../hate-speech-dataset/all_files/'
+    # text = []
+    # metadata["label"].replace('hate', 1, inplace=True)
+    # metadata["label"].replace("noHate", 0, inplace=True)
+    # metadata = metadata[(metadata["label"] == 0) | (metadata["label"] == 1)]
+    # print(metadata.head())
+    # for id, row in metadata.iterrows():
+    #     file = row['file_id']
+    #     string = open(all_files + file + '.txt', 'r',  encoding="utf8").read()
+    #     text.append(string)
+    #
+    # df = pd.DataFrame()
+    # df["text"] = text
+    # df["label"] = metadata["label"]
+    # df.to_csv('supremacy_dataset.csv')
+    df = pd.read_csv('supremacy_dataset.csv')
+    # df["label"].replace('hate', 1, inplace=True)
+    # df["label"].replace("noHate", 0, inplace=True)
+    # print(df.head())
+    # df = lower_case(df)
+    # df = remove_special_chars(df)
+    # df['processed'] = df['text'].apply(denoise_text)
+    # df["processed"] = df['processed'].apply(lambda x: " ".join([word for word in x.split()
+    #                                                             if len(word) > 3]))
+    # pth = '../datasets/supremacy_dataset.csv'
+    # df.to_csv(pth)
