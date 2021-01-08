@@ -1,8 +1,9 @@
 # Explainable active learning
 We aim to add the concept of explainability to active learning. This is composed of two parts:
 - Explaining active learning batches
-    - Generating batches that are more transparent and easier to analyze and annotate
-    - Incorporating shapely explanations for explanations model behavior
+    - Generating batches that are more transparent and easier to analyze
+    - Incorporating shapely explanations for explanating model behavior
+    - Uncertainty of the explainable batches - How to quanity uncertainty, understand explainability with uncertainty 
 
 - Explaning Active learning selection strategies: This part is addressed in a separate repo: https://github.com/sahithyaravi1493/alre
     - Visualizing active learning selection strategies – Insight into AL algorithm
@@ -11,7 +12,12 @@ We aim to add the concept of explainability to active learning. This is composed
     - Supports 3 BMAL algorithms: 
     - ranked batch mode, k-means uncertain, k-means closest
 
-
+## File structure
+- Project Overview.pptx - Gives an overview of our project and future directions.
+- notebooks : This folder contains the major machine learning experiments carried out for different datasets.
+- app : This folder contains the code for the flask and dash web applications.
+- migrations: This folder contains the database migrations.
+- models : This folder contains the models used by the web applications.
 
 ## Steps to replicate this prototype on localhost
 
@@ -37,5 +43,4 @@ based on your local database URL.
 - Connect to server using \connect root@localhost
 - create database shapely;
 - Now, run training.py. It should create new tables for storing the batches to be labelled.
-
-### run server.py
+- run server.py
