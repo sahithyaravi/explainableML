@@ -14,10 +14,10 @@ We aim to add the concept of explainability to active learning. This is composed
 
 ## File structure
 - Project Overview.pptx - Gives an overview of our project and future directions.
-- notebooks : This folder contains the major machine learning experiments carried out for different datasets.
+- notebooks : This folder contains machine learning experiments/ tutorial examples carried out for different datasets
 - app : This folder contains the code for the flask and dash web applications.
 - migrations: This folder contains the database migrations.
-- models : This folder contains the models used by the web applications.
+- models : This folder contains some built-in functions which help with modeling, explanations, clustering, plotting etc.
 
 ## Steps to replicate this prototype on localhost
 
@@ -36,11 +36,19 @@ based on your local database URL.
 
 `flask db upgrade`
 
-### Mysql local database for cluster.
-
+### Mysql local database 
+You need to create a new database called shapely in your local mysql server:
 - Open mysql shell
 - Switch to mysql using \sql
 - Connect to server using \connect root@localhost
 - create database shapely;
-- Now, run training.py. It should create new tables for storing the batches to be labelled.
+
+
+### Generate annotation data
+- Now, use run either generate_annotation_data.py or for more detailed descriptions, notebooks/guided_training-tutorial.ipynb. 
+It should create new tables in shapely database. These tables will store the batches to be labelled.
+These tables are used by the flask and dash applications.
+
+### Run application
 - run server.py
+You should be able to see the login screen now

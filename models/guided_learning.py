@@ -20,6 +20,7 @@ from app.config import Config
 
 
 class GuidedLearner:
+    """ Contains helper functions to easily create data to be used by the guided annotation tool """
     def __init__(self, df_train, df_test, df_pool, df_individual, dataset, round=0):
         # print(df_individual.head())
         n_individual_rows = df_individual.shape[0]

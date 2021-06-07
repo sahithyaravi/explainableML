@@ -35,12 +35,12 @@ class Retrainer:
         # self.df_train.drop('level_0', axis=1)
         print(train.shape, self.df_train.shape, self.df_pool.shape)
 
-    def retrain_model(self):
-        learner = GuidedLearner(self.df_train, self.df_test, self.df_pool, self.dataset, self.round)
-        learner.fit_svc(max_iter=2000, C=1, kernel='linear')
-        learner.get_shap_values()
-        learner.get_keywords()
-        learner.cluster_data_pool(n_clusters=20)
+    # def retrain_model(self):
+    #     learner = GuidedLearner(self.df_train, self.df_test, self.df_pool, self.dataset, self.round)
+    #     learner.fit_svc(max_iter=2000, C=1, kernel='linear')
+    #     learner.get_shap_values()
+    #     learner.get_keywords()
+    #     learner.cluster_data_pool(n_clusters=20)
 
 
 
