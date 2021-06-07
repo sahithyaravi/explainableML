@@ -18,9 +18,10 @@ from scipy.spatial.distance import euclidean, cosine
 from sqlalchemy import create_engine
 from app.config import Config
 
+
 class GuidedLearner:
-    def __init__(self, df_train, df_test, df_pool, df_individual, dataset, round):
-        print(df_individual.head())
+    def __init__(self, df_train, df_test, df_pool, df_individual, dataset, round=0):
+        # print(df_individual.head())
         n_individual_rows = df_individual.shape[0]
         ids = []
         j = 0
@@ -28,14 +29,22 @@ class GuidedLearner:
             ids.extend([j]*15)
             j += 1
         ids = ids[:n_individual_rows]
-        print(len(ids), n_individual_rows)
+        # print(len(ids), n_individual_rows)
         df_individual["cluster_id"] = ids
         self.round = round
         df_individual["round"] = self.round
+        self.df_individual = df_individual
         self.df_train = df_train
         self.df_test = df_test
         self.df_pool = df_pool
         self.dataset = dataset
+        self.model, self.tfid = None, None
+        self.x_train, self.x_pool, self.x_test = None, None, None
+        self.y_train, self.y_pool, self.y_test = None, None, None
+        self.shap_values_train, self. shap_values_pool = None, None
+        self.key_words_pos, self.key_words_neg, self.key_words = None, None, None
+
+    def tfid_fit(self):
         self.tfid = TfidfVectorizer(max_features=5000)
         self.tfid.fit(self.df_train['processed'].values)
         self.x_train = self.tfid.transform(self.df_train['processed'].values).toarray()
@@ -44,38 +53,37 @@ class GuidedLearner:
         self.y_test = self.df_test['label'].values
         self.x_pool = self.tfid.transform(self.df_pool['processed'].values).toarray()
         self.y_pool = self.df_pool['label'].values
-        self.model = None
-        self.shap_values_train = None
-        self. shap_values_pool = None
-        self.key_words_pos = None
-        self.key_words_neg = None
-        self.key_words = None
-        SQLALCHEMY_DATABASE_URI = Config.SQLALCHEMY_DATABASE_URI
-        self.engine = create_engine(SQLALCHEMY_DATABASE_URI, echo=False)
-        self.df_train.to_sql(f"{self.dataset}_train", con=self.engine, if_exists="replace",
-                             index=False)
-        self.df_test.to_sql(f"{self.dataset}_test", con=self.engine, if_exists="replace",
-                            index=False)
-        df_individual.to_sql(f"{self.dataset}_noshap", con=self.engine, if_exists="replace",
-                             index=False
-                             )
+        return self.x_train, self.x_test, self.x_pool, self.y_train, self.y_test, self.y_pool
 
-    def fit_svc(self, max_iter, C, kernel):
-        self.model = SVC(max_iter=max_iter, C=C, kernel=kernel, probability=True)
-        self.model.fit(self.x_train, self.y_train)
-        print("train score", self.model.score(self.x_train, self.y_train))
+    def grid_search_fit_svc(self, c=None):
+        if c is None:
+            c = [0.8, 1]
+        max_iter = 1000
+        best_f1 = 0
+        model = None
+        for c in C:
+            m = SVC(max_iter=max_iter, C=c, kernel='linear', class_weight='balanced', probability=True)
+            m.fit(self.x_train, self.y_train)
+            predictions = m.predict(self.x_test)
+            f1 = f1_score(predictions, self.y_test)
+            if f1 > best_f1:
+                self.model = m
+                best_f1 = f1
         pred = self.model.predict(self.x_test)
-        print("Confusion matrix ", confusion_matrix(self.y_test, pred))
-        print("Accuracy ", accuracy_score(self.y_test, pred))
+        print("F1 score on test set ", f1_score(self.y_test, pred))
+        print("Confusion matrix on test set ", confusion_matrix(self.y_test, pred))
+        print("Accuracy test set", accuracy_score(self.y_test, pred))
         pred = self.model.predict(self.x_pool)
-        print("Confusion matrix POOL ", confusion_matrix(self.y_pool, pred))
-        print("Accuracy POOL", accuracy_score(self.y_pool, pred))
+        print("F1 score on pool ", f1_score(self.y_pool, pred))
+        print("Confusion matrix of final model on pool ", confusion_matrix(self.y_pool, pred))
+        print("Accuracy of final model on pool", accuracy_score(self.y_pool, pred))
         explainer = shap.LinearExplainer(self.model, self.x_train, feature_perturbation="independent")
         # TODO extract feature importance value of each feature
         self.shap_values_train = explainer.shap_values(self.x_train)
         self.shap_values_pool = explainer.shap_values(self.x_pool)
         feature_names = np.array(self.tfid.get_feature_names())  # len(feature_names) = #cols in shap_values_pool
         shap.summary_plot(self.shap_values_train, self.x_train, feature_names=feature_names)
+        return self.model, explainer
 
     def fit_tree(self):
         estimators = [100, 500, 1000, 1500, 2000, 5000]
@@ -88,19 +96,19 @@ class GuidedLearner:
                 for m in max_depth:
                     self.model = GradientBoostingClassifier(n_estimators=e, max_features=f, max_depth=m)
                     self.model.fit(self.x_train, self.y_train)
-                    print("Score on train set", self.model.score(self.x_train, self.y_train))
+                    # print("Score on train set", self.model.score(self.x_train, self.y_train))
                     pred = self.model.predict(self.x_test)
-                    print("Confusion matrix ", confusion_matrix(self.y_test, pred))
+                    # print("Confusion matrix ", confusion_matrix(self.y_test, pred))
                     s = accuracy_score(self.y_test, pred)
-                    print("Accuracy on test set ", s)
+                    # print("Accuracy on test set ", s)
                     if s > max_score:
                         max_score = s
                         best_model = self.model
         print("BEST MODEL", best_model.n_estimators, best_model.max_features, best_model.max_depth)
         self.model = best_model
         pred = self.model.predict(self.x_pool)
-        print("Confusion matrix POOL ", confusion_matrix(self.y_pool, pred))
-        print("Accuracy POOL", accuracy_score(self.y_pool, pred))
+        print("Confusion matrix of best model on pool ", confusion_matrix(self.y_pool, pred))
+        print("Accuracy of best model on pool", accuracy_score(self.y_pool, pred))
 
         explainer = shap.TreeExplainer(self.model, self.x_train)
         # TODO extract feature importance value of each feature
@@ -109,8 +117,9 @@ class GuidedLearner:
         feature_names = np.array(self.tfid.get_feature_names())  # len(feature_names) = #cols in shap_values_pool
         shap.summary_plot(self.shap_values_pool, self.x_pool, feature_names=feature_names)
         self.shap_values_pool = self.shap_values_pool
+        return self.model, explainer
 
-    def get_keywords(self):
+    def _get_keywords(self):
         print("shap values", len(self.shap_values_pool))
         feature_names = np.array(self.tfid.get_feature_names())  # len(feature_names) = #cols in shap_values_pool
         arr = self.shap_values_pool.copy()
@@ -127,6 +136,10 @@ class GuidedLearner:
         self.key_words_neg = np.array([feature_names[neg_indices]]).T
 
     def cluster_data_pool(self, n_clusters):
+        self._get_keywords()
+        colorscale = [[0, 'mediumturquoise'], [1, 'salmon']]
+        classwise_uncertainty = self.model.predict_proba(self.x_pool)
+        uncertainty = 1 - np.max(classwise_uncertainty, axis=1)
         kmeans = KMeans(n_clusters=n_clusters, n_jobs=-1, max_iter=600)
         kmeans.fit(self.shap_values_pool)
         print("Homogenity score", homogeneity_score(self.y_pool, kmeans.labels_))
@@ -187,10 +200,30 @@ class GuidedLearner:
                                                line=dict(color='black', width=5)),
                                    name='centroid cluster ' + str(cluster_id)
                                    ))
+            data.append(go.Heatmap(x=cp[:, 0],
+                                   y=cp[:, 1],
+                                   z=uncertainty[cluster_indices],
+                                   name='uncertainity map',
+                                   visible=True,
+                                   showscale=False,
+                                   colorscale=colorscale,
+                                   ))
             collect[cluster_id] = self.df_pool['text'].values[cluster_indices]
 
         fig = go.Figure(data=data)
         fig.show()
+        return df_final_labels
+
+    def save_to_db(self, df_final_labels):
+        SQLALCHEMY_DATABASE_URI = Config.SQLALCHEMY_DATABASE_URI
+        self.engine = create_engine(SQLALCHEMY_DATABASE_URI, echo=False)
+        self.df_train.to_sql(f"{self.dataset}_train", con=self.engine, if_exists="replace",
+                             index=False)
+        self.df_test.to_sql(f"{self.dataset}_test", con=self.engine, if_exists="replace",
+                            index=False)
+        self.df_individual.to_sql(f"{self.dataset}_noshap", con=self.engine, if_exists="replace",
+                             index=False
+                             )
         df_final_labels.reset_index(drop=True, inplace=True)
         df_final_labels["round"] = self.round
         df_final_labels.to_sql(f"{self.dataset}_cluster", con=self.engine, if_exists="replace")
