@@ -1,3 +1,3 @@
 SETUP = "local"  # web
-PASSWORD = " "
+PASSWORD = "1993sahi11"
 

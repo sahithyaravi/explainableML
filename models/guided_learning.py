@@ -212,7 +212,7 @@ class GuidedLearner:
                                    z=uncertainty[cluster_indices],
                                    name='uncertainity map',
                                    visible=True,
-                                   showscale=True,
+                                   showscale=False,
                                    colorscale=colorscale,
                                    ))
             collect[cluster_id] = self.df_pool['text'].values[cluster_indices]
