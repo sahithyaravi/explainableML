@@ -110,7 +110,7 @@ def get_all_user_labels():
     database_url = Config.SQLALCHEMY_DATABASE_URI
     sql = f"SELECT * from label"
     df = pd.read_sql_query(sql=sql, con=database_url)
-    df.to_pickle('all_labels.pkl')
+    # df.to_pickle('all_labels.pkl')
     return df
 
 # import os
