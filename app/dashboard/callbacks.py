@@ -11,6 +11,7 @@ import os
 import time
 from flask_login import current_user
 
+from app.run_config import *
 logging.basicConfig(level=logging.INFO)
 
 
@@ -155,10 +156,11 @@ def register_callbacks(app):
                 from app.utils import time_to_db, write_to_db_pkl
 
                 time_to_db(current_user.id, time_elapsed, dataset)
-                # import os
-                # labelled_df = pd.read_pickle(f"{current_user.id}_{dataset}.pkl")
-                # write_to_db_pkl(labelled_df, dataset=dataset)
-                # os.remove(f"{current_user.id}_{dataset}.pkl")
+                if SETUP == "local":
+                    import os
+                    labelled_df = pd.read_pickle(f"{current_user.id}_{dataset}.pkl")
+                    write_to_db_pkl(labelled_df, dataset=dataset)
+                    os.remove(f"{current_user.id}_{dataset}.pkl")
                 output = html.P(f" Great! Done with this dataset."
                                 f"Select the next dataset for labelling.", style={'marginLeft': '50px'})
         return output, start_time

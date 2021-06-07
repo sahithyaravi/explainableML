@@ -18,6 +18,7 @@ We aim to add the concept of explainability to active learning. This is composed
 - app : This folder contains the code for the flask and dash web applications.
 - migrations: This folder contains the database migrations.
 - models : This folder contains some built-in functions which help with modeling, explanations, clustering, plotting etc.
+- scripts: This folder contains some scripts required for result analysis, cron jobs and so on.
 
 ## Steps to replicate this prototype on localhost
 
@@ -25,8 +26,24 @@ We aim to add the concept of explainability to active learning. This is composed
 Clone this repo.
 Install requirements using `pip install -r requirements.txt`
 
-### Step 2
-#### Local database setup for login
+### Step 2: Database setup
+#### Mysql local database 
+You need to create a new database called shapely in your local mysql server:
+Some basic steps:
+- Open mysql shell
+- Switch to mysql using \sql
+- Connect to server using \connect root@localhost
+- type create database shapely;
+
+(or)
+
+You could use mysql workbench to create the new database
+
+#### Configure the app
+Please set the PASSWORD variable in app/run_config.py to your local DB password.
+Set SETUP = "local".
+
+#### Database migrations for flask
 Change the database URL and password in config.py
 based on your local database URL.
 
@@ -36,19 +53,19 @@ based on your local database URL.
 
 `flask db upgrade`
 
-### Mysql local database 
-You need to create a new database called shapely in your local mysql server:
-- Open mysql shell
-- Switch to mysql using \sql
-- Connect to server using \connect root@localhost
-- create database shapely;
 
 
-### Generate annotation data
-- Now, use run either generate_annotation_data.py or for more detailed descriptions, notebooks/guided_training-tutorial.ipynb. 
-It should create new tables in shapely database. These tables will store the batches to be labelled.
+
+### Step 3: Generate annotation data
+- Now, use run either `generate_annotation_data.py` or for more detailed descriptions, `notebooks/guided_training-tutorial.ipynb`. 
+- Running either of these should create new tables in shapely database. These tables will store the batches to be labelled.
 These tables are used by the flask and dash applications.
+- If you are running for the first time, make sure the tables are added in your local database.
 
-### Run application
+
+### Step 4: Run application
 - run server.py
-You should be able to see the login screen now
+- You should be able to see the login/register screen now.
+Select the guided or unguided version of the dataset for which you performed step 3.
+
+
