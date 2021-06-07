@@ -6,6 +6,7 @@ pd.set_option('display.max_colwidth', 1000)
 
 clear_labels()
 df = pd.read_csv('datasets/davidson_dataset.csv') # substitute other datasets in similar format
+df = df.sample(1000)
 t = Trainer(dataset_name="davidson") # the name which you want for the tables in the database
 df_train, df_test, df_pool, df_individual = t.train_test_pool_split(df)
 

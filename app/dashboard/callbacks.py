@@ -2,15 +2,16 @@ import dash
 from dash.dependencies import Output, Input, State
 import dash_core_components as dcc
 import dash_html_components as html
+
 import pandas as pd
-import os
 import dash_table
+
 import logging
 import os
-from flask_login import current_user
-rnd = 1
-logging.basicConfig(level=logging.INFO)
 import time
+from flask_login import current_user
+
+logging.basicConfig(level=logging.INFO)
 
 
 def register_callbacks(app):
@@ -35,7 +36,7 @@ def register_callbacks(app):
         )
         start_time = dcc.Store(id='start_time')
         stored_clicks = 0 if stored_clicks is None else stored_clicks
-        style = {'marginTop': '10px', 'marginBottom': '50px', 'display': 'none'}
+        # style = {'marginTop': '10px', 'marginBottom': '50px', 'display': 'none'}
         text = ""
         logging.info(f"{dataset}")
         next = ""
@@ -182,6 +183,7 @@ def register_callbacks(app):
             return [[]]
 
 
+########################################################################################################################
 def fetch_queries(dataset, next_round, selected_rows):
 
     # fetch dataset queries from pickle for now
@@ -246,29 +248,3 @@ def create_table(df):
     )
     return table
 
-
-    # @app.callback(Output('queries', 'children'),
-    #               [Input('next_round', 'n_clicks')
-    #                ],
-    #               [State('radio_label', 'value'),
-    #                State('select_dataset', 'value')])
-    # def get_queries_write_labels_radio(next_round, label, dataset):
-    #     output = ""
-    #     if next_round is not None:
-    #         if next_round > 1:
-    #             logging.debug("Updating labels for next round", next_round-1)
-    #
-    #         df = fetch_queries(dataset, next_round, label)
-    #         table_text = []
-    #         for index, row in df.iterrows():
-    #             row["text"] = " " + row["text"] + " "
-    #             str1 = row["text"].split(row["keywords"])
-    #             keyword = row["keywords"]
-    #             out = f"{str1[0]}**{keyword}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{keyword}**"
-    #             table_text.append(out)
-    #         if table_text:
-    #             display_table = create_table(pd.DataFrame(table_text))
-    #             output = html.Div(display_table)
-    #         else:
-    #             output = html.Div(" Batch Completed, Model retraining")
-    #     return output
