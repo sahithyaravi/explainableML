@@ -37,10 +37,10 @@ class Trainer:
                                                       random_state=seed)
         else:
             indices = np.random.randint(low=0, high=df.shape[0], size=df.shape[0])
-            train_indices = indices[0:round(0.6 * df.shape[0])]
-            test_indices = indices[round(0.6 * df.shape[0]): round(0.7 * df.shape[0])]
-            pool_indices = indices[round(0.7 * df.shape[0]): round(0.8 * df.shape[0])]
-            individual_indices = indices[round(0.8 * df.shape[0]):]
+            train_indices = indices[0:round(0.7 * df.shape[0])]
+            test_indices = indices[round(0.7 * df.shape[0]): round(0.8 * df.shape[0])]
+            pool_indices = indices[round(0.8 * df.shape[0]): round(0.9 * df.shape[0])]
+            individual_indices = indices[round(0.9 * df.shape[0]):]
 
             self.df_train = df.iloc[train_indices]
             self.df_test = df.iloc[test_indices]

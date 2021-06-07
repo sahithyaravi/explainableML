@@ -53,7 +53,7 @@ class GuidedLearner:
         self.y_test = self.df_test['label'].values
         self.x_pool = self.tfid.transform(self.df_pool['processed'].values).toarray()
         self.y_pool = self.df_pool['label'].values
-        return self.x_train, self.x_test, self.x_pool, self.y_train, self.y_test, self.y_pool
+        return self.tfid, self.x_train, self.x_test, self.x_pool, self.y_train, self.y_test, self.y_pool
 
     def grid_search_fit_svc(self, c=None):
         if c is None:
@@ -61,8 +61,8 @@ class GuidedLearner:
         max_iter = 1000
         best_f1 = 0
         model = None
-        for c in C:
-            m = SVC(max_iter=max_iter, C=c, kernel='linear', class_weight='balanced', probability=True)
+        for c_option in c:
+            m = SVC(max_iter=max_iter, C=c_option, kernel='linear', class_weight='balanced', probability=True)
             m.fit(self.x_train, self.y_train)
             predictions = m.predict(self.x_test)
             f1 = f1_score(predictions, self.y_test)
@@ -135,15 +135,19 @@ class GuidedLearner:
         self.key_words_pos = np.array([feature_names[pos_indices]]).T
         self.key_words_neg = np.array([feature_names[neg_indices]]).T
 
-    def cluster_data_pool(self, n_clusters):
+    def cluster_data_pool(self, n_clusters=20):
         self._get_keywords()
         colorscale = [[0, 'mediumturquoise'], [1, 'salmon']]
         classwise_uncertainty = self.model.predict_proba(self.x_pool)
         uncertainty = 1 - np.max(classwise_uncertainty, axis=1)
+
+        # cluster shapely values
         kmeans = KMeans(n_clusters=n_clusters, n_jobs=-1, max_iter=600)
         kmeans.fit(self.shap_values_pool)
         print("Homogenity score", homogeneity_score(self.y_pool, kmeans.labels_))
         similarity_to_center = []
+
+        # find centroid of cluster
         for i, instance in enumerate(self.shap_values_pool):
             cluster_label = kmeans.labels_[i]  # cluster of this instance
             centroid = kmeans.cluster_centers_[cluster_label]  # cluster center of the cluster of that instance
@@ -156,11 +160,14 @@ class GuidedLearner:
             if centroid_match[cluster_label] is None or similarity_to_center[i] > centroid_match[cluster_label]:
                 centroid_indices[cluster_label] = i
                 centroid_match[cluster_label] = similarity_to_center[i]
-        pca = PCA(n_components=2)
-       # principals = pca.fit_transform(self.shap_values_pool)
+
+        # use TSNE for plotting clusters
+        # pca = PCA(n_components=2)
+        # principals = pca.fit_transform(self.shap_values_pool)
         tsne = TSNE(n_components=2, perplexity=20)
         principals = tsne.fit_transform(self.shap_values_pool)
 
+        # iterate through each cluster, plot, add keywords
         data = []
         collect = dict()
         color = ['hsl(' + str(h) + ',80%' + ',50%)' for h in np.linspace(0, 255, n_clusters)]
@@ -205,14 +212,14 @@ class GuidedLearner:
                                    z=uncertainty[cluster_indices],
                                    name='uncertainity map',
                                    visible=True,
-                                   showscale=False,
+                                   showscale=True,
                                    colorscale=colorscale,
                                    ))
             collect[cluster_id] = self.df_pool['text'].values[cluster_indices]
 
         fig = go.Figure(data=data)
         fig.show()
-        return df_final_labels
+        return df_final_labels, uncertainty
 
     def save_to_db(self, df_final_labels):
         SQLALCHEMY_DATABASE_URI = Config.SQLALCHEMY_DATABASE_URI
