@@ -1,4 +1,5 @@
 import dash_core_components as dcc
+import dash_bootstrap_components as dbc
 import dash_html_components as html
 import dash_table
 
@@ -18,12 +19,12 @@ top_bar = html.Div(html.Div([html.A(brand_name),
 choose_dataset = dcc.Dropdown(id='select_dataset',
                               options=[{'label': 'davidson_guided', 'value': 'davidson_dataset_cluster'},
                                        {'label': 'davidson_not_guided', 'value': 'davidson_dataset_noshap'},
-                                       {'label': 'yelp_guided', 'value': 'yelp_dataset_cluster'},
-                                       {'label': 'yelp_not_guided', 'value': 'yelp_dataset_noshap'},
-                                       {'label': 'bank_guided', 'value': 'bank_dataset_cluster'},
+                                       # {'label': 'yelp_guided', 'value': 'yelp_dataset_cluster'},
+                                       # {'label': 'yelp_not_guided', 'value': 'yelp_dataset_noshap'},
+                                       # {'label': 'bank_guided', 'value': 'bank_dataset_cluster'},
 
                                        # {'label': 'founta', 'value': 'founta_dataset'},
-                                       # {'label': 'gao', 'value': 'gao_dataset'},
+                                       {'label': 'gao_guided', 'value': 'gao_dataset_cluster'},
                                        # {'label': 'waseem', 'value': 'waseem_dataset'},
                                        # {'label': 'mnist-mini', 'value': 'mnist'},
                                        ],
@@ -37,6 +38,8 @@ submit_dataset = html.Button('Submit', id='start', autoFocus=True)
 queries = dcc.Loading(html.Div(id='queries'))
 
 url = dcc.Location(id='url')
+
+progress_bar = html.Progress( id='progress', value=0)
 
 ###################
 
@@ -88,6 +91,7 @@ def serve_layout():
             html.Div(id='timer'),
             # radio_label,
             html.Div(id='next'),
+            progress_bar,
             stop_watch,
         ],  style={"fontFamily": font, 'verticalAlign': 'middle'})
     return layout

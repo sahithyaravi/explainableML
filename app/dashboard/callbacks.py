@@ -45,7 +45,7 @@ def register_callbacks(app):
             user_file = pd.DataFrame()
             if not os.path.exists(f"{current_user.id}_{dataset}_user.pkl"):
                 user_file.to_pickle(f"{current_user.id}_{dataset}_user.pkl")
-            if dataset == "davidson_dataset_cluster":
+            if dataset == "davidson_dataset_cluster" or dataset == "gao_dataset_cluster":
                 text = dcc.Markdown('''
                 * For this experiment, you will be presented groups of sentences.
                 * Select the sentences in the group which contain **hate-speech***.
@@ -98,7 +98,9 @@ def register_callbacks(app):
         return clicks, text, html.Div(next), dummy_table_layout, start_time
 
     @app.callback([Output('queries', 'children'),
-                   Output('start_time', 'data')],
+                   Output('start_time', 'data'),
+                   # Output('progress', 'children'),
+                   Output('progress', 'value')],
                   [Input('next_round', 'n_clicks'),
                    ],
                   [State('datatable', 'selected_rows'),
@@ -107,6 +109,7 @@ def register_callbacks(app):
     def get_queries_write_labels(next_round,  selected_rows, dataset, start_time):
         output = ""
         print(next_round, " next round ", dataset)
+        progress_percent = 0
 
         if next_round is not None and next_round:
             if next_round == 1:
@@ -114,7 +117,7 @@ def register_callbacks(app):
             if next_round > 1:
                 logging.debug("Updating labels for next round", next_round-1)
 
-            df = fetch_queries(dataset, next_round, selected_rows)
+            df, progress_percent = fetch_queries(dataset, next_round, selected_rows)
 
             table_text = []
             for index, row in df.iterrows():
@@ -163,7 +166,7 @@ def register_callbacks(app):
                     os.remove(f"{current_user.id}_{dataset}.pkl")
                 output = html.P(f" Great! Done with this dataset."
                                 f"Select the next dataset for labelling.", style={'marginLeft': '50px'})
-        return output, start_time
+        return output, start_time,   progress_percent #f"{progress_percent}%",
 
     @app.callback(
         [Output('datatable', 'selected_rows')],
@@ -192,7 +195,7 @@ def fetch_queries(dataset, next_round, selected_rows):
     logging.debug(f"directory{os.curdir}")
     df = pd.read_pickle(f"{dataset}queries.pkl")
     round = df["round"].iloc[0]
-
+    progress_percent = next_round /df['cluster_id'].nunique()
     from ..utils import get_labelled_indices,get_labelled_indices_pkl
 
     # Get all labelled indices of the user
@@ -222,7 +225,7 @@ def fetch_queries(dataset, next_round, selected_rows):
         next_cluster = df_unlabelled["cluster_id"].min()
     queries = df[df["cluster_id"] == next_cluster]
     logging.info(f" Reading cluster {next_cluster} for user to label")
-    return queries
+    return queries, progress_percent*100
 
 
 def create_table(df):

@@ -6,10 +6,11 @@ pd.set_option('display.max_colwidth', 1000)
 
 clear_labels()
 df = pd.read_csv('datasets/davidson_dataset.csv') # substitute other datasets in similar format
-t = Trainer(dataset_name="davidson") # the name which you want for the tables in the database
+# df['processed'] = df['text']
+t = Trainer(dataset_name="davidson_dataset") # the name which you want for the tables in the database
 df_train, df_test, df_pool, df_individual = t.train_test_pool_split(df)
 
-learner = GuidedLearner(df_train, df_test, df_pool, df_individual, 'davidson', 1)
+learner = GuidedLearner(df_train, df_test, df_pool, df_individual, 'davidson_dataset', 1)
 tfid, x_train, x_test, x_pool, y_train, y_test, y_pool = learner.tfid_fit()
 
 model, explainer = learner.grid_search_fit_svc(c=[1])
