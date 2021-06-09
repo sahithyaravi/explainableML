@@ -24,7 +24,7 @@ choose_dataset = dcc.Dropdown(id='select_dataset',
                                        # {'label': 'bank_guided', 'value': 'bank_dataset_cluster'},
 
                                        # {'label': 'founta', 'value': 'founta_dataset'},
-                                       {'label': 'gao_guided', 'value': 'gao_dataset_cluster'},
+                                       # {'label': 'gao_guided', 'value': 'gao_dataset_cluster'},
                                        # {'label': 'waseem', 'value': 'waseem_dataset'},
                                        # {'label': 'mnist-mini', 'value': 'mnist'},
                                        ],
