@@ -161,7 +161,7 @@ def register_callbacks(app):
                 time_to_db(current_user.id, time_elapsed, dataset)
                 if SETUP == "local":
                     import os
-                    labelled_df = pd.read_pickle(f"{current_user.id}_{dataset}.pkl")
+                    labelled_df = pd.read_pickle(f"{current_user.id}_{dataset}_user.pkl")
                     write_to_db_pkl(labelled_df, dataset=dataset)
                     os.remove(f"{current_user.id}_{dataset}.pkl")
                 output = html.P(f" Great! Done with this dataset."

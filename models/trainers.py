@@ -11,7 +11,7 @@ class Trainer:
         self.df_individual = None
         self.dataset_name = dataset_name
 
-    def train_test_pool_split(self, df, stratify=False):
+    def train_test_pool_split(self, df, stratify=False, train_frac=0.8, test_frac=0.9, pool_frac=0.95):
         """
 
         :param df: the dataset for train test split
@@ -37,10 +37,10 @@ class Trainer:
                                                       random_state=seed)
         else:
             indices = np.random.randint(low=0, high=df.shape[0], size=df.shape[0])
-            train_indices = indices[0:round(0.8 * df.shape[0])]
-            test_indices = indices[round(0.8 * df.shape[0]): round(0.9 * df.shape[0])]
-            pool_indices = indices[round(0.9 * df.shape[0]): round(0.95 * df.shape[0])]
-            individual_indices = indices[round(0.95 * df.shape[0]):]
+            train_indices = indices[0:round(train_frac * df.shape[0])]
+            test_indices = indices[round(train_frac* df.shape[0]): round(test_frac * df.shape[0])]
+            pool_indices = indices[round(test_frac * df.shape[0]): round(pool_frac * df.shape[0])]
+            individual_indices = indices[round(pool_frac* df.shape[0]):]
 
             self.df_train = df.iloc[train_indices]
             self.df_test = df.iloc[test_indices]

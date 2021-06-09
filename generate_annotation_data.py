@@ -8,9 +8,9 @@ clear_labels()
 dataset_name = 'davidson_dataset'
 df = pd.read_csv(f"datasets/{dataset_name}.csv")  # substitute other datasets in similar format
 t = Trainer(dataset_name=dataset_name) # the name which you want for the tables in the database
-df_train, df_test, df_pool, df_individual = t.train_test_pool_split(df, stratify=False)
+df_train, df_test, df_pool, df_individual = t.train_test_pool_split(df, stratify=False) #, train_frac=0.6, test_frac=0.7, pool_frac=0.85)
 print(df_train.shape, df_test.shape, df_individual.shape)
-n_clusters = 25
+n_clusters = 30
 print("Number of points to be clustered: ", df_pool.shape)
 print("Number of clusters: ", n_clusters)
 learner = GuidedLearner(df_train, df_test, df_pool, df_individual, dataset_name, 1)
