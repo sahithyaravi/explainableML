@@ -23,17 +23,17 @@ class Trainer:
         # df.columns = ['index','text', 'label', 'processed']
         print(df.shape)
         df.drop_duplicates(subset=['processed'], inplace=True, keep='last')
-        df.drop_duplicates(subset=['processed'], inplace=True)
+        # df.drop_duplicates(subset=['processed'], inplace=True)
         print(df.shape)
-        seed = 200
+        seed = 100
         np.random.seed(seed)
         if stratify:
             self.df_train, df_valid = train_test_split(
-                df, test_size=0.4, shuffle=True, stratify=df.label,
+                df, test_size=0.2, shuffle=True, stratify=df.label,
                 random_state=seed)
-            self.df_test, df_rest = train_test_split(df_valid, test_size=0.75, shuffle=True, stratify=df_valid.label,
+            self.df_test, df_rest = train_test_split(df_valid, test_size=0.5, shuffle=True, stratify=df_valid.label,
                                                 random_state=seed)
-            self.df_pool, self.df_individual = train_test_split(df_rest, test_size=0.3, shuffle=True, stratify=df_rest.label,
+            self.df_pool, self.df_individual = train_test_split(df_rest, test_size=0.5, shuffle=True, stratify=df_rest.label,
                                                       random_state=seed)
         else:
             indices = np.random.randint(low=0, high=df.shape[0], size=df.shape[0])
