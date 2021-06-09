@@ -19,7 +19,7 @@ top_bar = html.Div(html.Div([html.A(brand_name),
 choose_dataset = dcc.Dropdown(id='select_dataset',
                               options=[{'label': 'davidson_guided', 'value': 'davidson_dataset_cluster'},
                                        {'label': 'davidson_not_guided', 'value': 'davidson_dataset_noshap'},
-                                       # {'label': 'yelp_guided', 'value': 'yelp_dataset_cluster'},
+                                       {'label': 'yelp_guided', 'value': 'yelp_dataset_cluster'},
                                        # {'label': 'yelp_not_guided', 'value': 'yelp_dataset_noshap'},
                                        # {'label': 'bank_guided', 'value': 'bank_dataset_cluster'},
 
@@ -39,7 +39,7 @@ queries = dcc.Loading(html.Div(id='queries'))
 
 url = dcc.Location(id='url')
 
-progress_bar = html.Progress( id='progress', value=0)
+progress_bar = html.Progress( id='progress', value=0, max=100)
 
 ###################
 

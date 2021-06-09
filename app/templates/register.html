@@ -1,17 +1,91 @@
 {% extends "base.html" %}
+{##}
+{#{% block content %}#}
+{#    <h1>Register</h1>#}
+{#    <form action="" method="post">#}
+{#        {{ form.hidden_tag() }}#}
+{#        <p>#}
+{#            {{ form.username.label }}<br>#}
+{#            {{ form.username(size=32) }}<br>#}
+{#        </p>#}
+{#        <p>#}
+{#            {{ form.password.label }}<br>#}
+{#            {{ form.password(size=32) }}<br>#}
+{#        </p>#}
+{#        <p>{{ form.submit() }}</p>#}
+{#    </form>#}
+{#{% endblock %}#}
+
+
 
 {% block content %}
-    <h1>Register</h1>
-    <form action="" method="post">
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.username.label }}<br>
-            {{ form.username(size=32) }}<br>
-        </p>
-        <p>
-            {{ form.password.label }}<br>
-            {{ form.password(size=32) }}<br>
-        </p>
-        <p>{{ form.submit() }}</p>
+<div class="grid-container">
+    <form id="survey-form" action="" method="post">
+        {{ form.csrf_token }}
+        <div class="title-description">
+            <h1 id="title">Registration Form</h1>
+            <p id="flash-message">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            {{ message }}
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </p>
+        </div>
+
+        {{ form.username.label }}
+        {{ form.username(size=32, placeholder='Enter a username for login') }}
+
+        {{ form.password.label }}
+        {{ form.password(size=32, placeholder='Enter a password for login') }}
+
+        {{ form.name.label }}
+        {{ form.name(size=32, placeholder='Insert your name') }}
+
+        {{ form.email.label }}
+        {{ form.email(size=32, maxlength=254, minlength=3,
+        placeholder='Insert your email') }}
+
+        {% for error in form.email.errors %}
+        <span id="error">{{ error }}</span>
+        {% endfor %}
+
+        {{ form.age.label }}
+        {{ form.age(size=16, min=3, max=122, placeholder='Insert your age') }}
+
+        <div class="options-title">
+            <p>{{ form.gender.label }}</p>
+        </div>
+        <div class="gender-options">
+            <ul>
+                {% for gender in form.gender %}
+                <li>
+                    {{ gender }}
+                    {{ gender.label }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="options-title">
+            <p>{{ form.english.label }}</p>
+        </div>
+        <div class="english-options">
+            <ul>
+                {% for level in form.english %}
+                <li>
+                    {{ level }}
+                    {{ level.label }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {{ form.ml.label }}
+        {{ form.ml }}
+        <div id="btn">
+            {{ form.submit() }}
+        </div>
     </form>
+</div>
 {% endblock %}

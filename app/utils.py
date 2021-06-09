@@ -62,6 +62,13 @@ def clear_labels():
     db.session.query(Labels).delete()
     db.session.commit()
 
+def clear_users():
+    db.session.query(User).delete()
+    db.session.commit()
+
+def clear_times():
+    db.session.query(Timer).delete()
+    db.session.commit()
 
 def get_labelled_data(dataset_name):
     database_url = Config.SQLALCHEMY_DATABASE_URI

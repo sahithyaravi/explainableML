@@ -166,7 +166,7 @@ def register_callbacks(app):
                     os.remove(f"{current_user.id}_{dataset}.pkl")
                 output = html.P(f" Great! Done with this dataset."
                                 f"Select the next dataset for labelling.", style={'marginLeft': '50px'})
-        return output, start_time,   progress_percent #f"{progress_percent}%",
+        return output, start_time,   progress_percent
 
     @app.callback(
         [Output('datatable', 'selected_rows')],
