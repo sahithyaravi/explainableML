@@ -129,7 +129,8 @@ class GuidedLearner:
         arr_neg = self.shap_values_pool.copy()
         arr_pos[arr_pos <= 0] = np.nan
         arr_neg[arr_neg >= 0] = np.nan
-        indices = np.nanargmax(arr, axis=1)
+        abs_arr = np.abs(arr)
+        indices = np.nanargmax(abs_arr, axis=1)
         pos_indices = np.nanargmax(arr_pos, axis=1)
         neg_indices = np.nanargmin(arr_neg, axis=1)
         self.key_words = np.array([feature_names[indices]]).T
