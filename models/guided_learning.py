@@ -137,7 +137,7 @@ class GuidedLearner:
         self.key_words_pos = np.array([feature_names[pos_indices]]).T
         self.key_words_neg = np.array([feature_names[neg_indices]]).T
 
-    def cluster_data_pool(self, n_clusters=20):
+    def cluster_data_pool(self, n_clusters=20, uncertainty_visible=False):
         self._get_keywords()
         colorscale = [[0, 'mediumturquoise'], [1, 'salmon']]
         classwise_uncertainty = self.model.predict_proba(self.x_pool)
@@ -146,6 +146,8 @@ class GuidedLearner:
         # cluster shapely values
         kmeans = KMeans(n_clusters=n_clusters, n_jobs=-1, max_iter=600)
         kmeans.fit(self.shap_values_pool)
+
+        print(self.shap_values_pool.shape, self.df_pool.shape, kmeans.labels_.shape)
         print("Homogenity score", homogeneity_score(self.y_pool, kmeans.labels_))
         similarity_to_center = []
 
@@ -177,19 +179,19 @@ class GuidedLearner:
         for cluster_id in np.unique(kmeans.labels_):
             cluster_indices = np.where(kmeans.labels_ == cluster_id)
             cluster_text = self.df_pool['text'].values[cluster_indices]
-
+            print("Cluster id", cluster_id, cluster_text.shape, np.unique(cluster_text).shape)
             cluster_truth = self.df_pool['label'].values[cluster_indices]
             center_index = centroid_indices[cluster_id]
             center_text = self.df_pool['text'].values[center_index]
             df_cluster = pd.DataFrame({'text': cluster_text})
             df_cluster['cluster_id'] = cluster_id
-            df_cluster['centroid'] = False
+            # df_cluster['centroid'] = False
             df_cluster['positive'] = self.key_words_pos[cluster_indices]
             df_cluster['negative'] = self.key_words_neg[cluster_indices]
             df_cluster['keywords'] = self.key_words[cluster_indices]
             df_cluster['truth'] = cluster_truth
-            df_cluster = df_cluster.append({'text': center_text, 'cluster_id': cluster_id,
-                                            'centroid': True}, ignore_index=True)
+            # df_cluster = df_cluster.append({'cluster_id': cluster_id,
+            #                                 'centroid': True}, ignore_index=True)
             df_final_labels = pd.concat([df_final_labels, df_cluster], ignore_index=True)
 
             cp = principals[cluster_indices]
@@ -213,7 +215,7 @@ class GuidedLearner:
                                    y=cp[:, 1],
                                    z=uncertainty[cluster_indices],
                                    name='uncertainity map',
-                                   visible=True,
+                                   visible=uncertainty_visible,
                                    showscale=False,
                                    colorscale=colorscale,
                                    ))
