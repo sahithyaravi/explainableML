@@ -25,7 +25,7 @@ class Trainer:
         df.drop_duplicates(subset=['processed'], inplace=True, keep='last')
         # df.drop_duplicates(subset=['processed'], inplace=True)
         print(df.shape)
-        seed = 10
+        seed = 150
         np.random.seed(seed)
         if stratify:
             self.df_train, df_valid = train_test_split(
