@@ -163,7 +163,7 @@ def register_callbacks(app):
                     import os
                     labelled_df = pd.read_pickle(f"{current_user.id}_{dataset}_user.pkl")
                     write_to_db_pkl(labelled_df, dataset=dataset, user_id=current_user.id)
-                    os.remove(f"{current_user.id}_{dataset}.pkl")
+                    os.remove(f"{current_user.id}_{dataset}_user.pkl")
                 output = html.P(f" Great! Done with this dataset."
                                 f"Select the next dataset for labelling.", style={'marginLeft': '50px'})
         return output, start_time,   progress_percent

@@ -14,3 +14,7 @@ notebooks/.ipynb_checkpoints/guided_training-yelp-ML-checkpoint.ipynb
 notebooks/.ipynb_checkpoints/guided_training-checkpoint.ipynb
 notebooks/.ipynb_checkpoints/guided_training-SVC-false-positive-checkpoint.ipynb
 notebooks/.ipynb_checkpoints/Keras LSTM for IMDB Sentiment Classification-checkpoint.ipynb
+notebooks/glove.6B.300d.txt
+gao_dataset_clusterqueries.pkl
+7_gao_dataset_cluster_user.pkl
+notebooks/.ipynb_checkpoints/guided_training-gao-checkpoint.ipynb
