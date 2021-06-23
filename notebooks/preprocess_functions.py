@@ -81,7 +81,7 @@ def denoise_text(text):
 ##############################################################
 
 
-dataset = "bank"
+dataset = "yelp2"
 
 # bank
 if dataset == "bank":
@@ -200,3 +200,32 @@ if dataset == "white":
     #                                                             if len(word) > 3]))
     # pth = '../datasets/supremacy_dataset.csv'
     # df.to_csv(pth)
+
+
+if dataset == "sst":
+    pth = '../datasets/sst-2.csv'
+    df = pd.read_csv(pth)
+    # df = lower_case(df)
+    # df = remove_special_chars(df)
+    # df['processed'] = df['text']
+    # print(df['processed'].dtype)
+    s = df['text'].drop_duplicates(inplace=False, keep=False)
+    print(s)
+    # df.to_csv(pth)
+
+
+if dataset == "yelp2":
+    pth = '../yelp-2.pkl'
+    df = pd.read_pickle(pth)
+    df["label"] = 1
+    df['label'][df.stars < 4] = 0
+    print(df['stars'].value_counts())
+    df_sample = df.sample(n=5000)
+    print(df_sample.shape)
+    print(df_sample.columns)
+    print(df_sample.label.value_counts())
+    df_sample.to_csv('yelp-2.csv')
+    # df = lower_case(df)
+    # df = remove_special_chars(df)
+    # df['processed'] = df['text']
+    # print(df['processed'].dtype)
