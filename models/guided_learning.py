@@ -143,7 +143,7 @@ class GuidedLearner:
             cluster_sizes = 20
         # Dimensionality reduction
         pca_ = PCA(n_components=pca_components)
-        cluster_data = self.x_pool
+        cluster_data = self.shap_values_pool
         principals = pca_.fit_transform(cluster_data)
         tsne = TSNE(n_components=2, perplexity=20)
         principals_tsne = tsne.fit_transform(cluster_data)

@@ -15,7 +15,7 @@ df_train, df_test, df_guided, df_unguided = t.train_test_pool_split(df,
                                                                     test_frac=0.2,
                                                                     pool_frac=0.1,
                                                                     unguided='different',
-                                                                    stratify=False
+                                                                    stratify=False,
                                                                     )
 
 
@@ -26,5 +26,5 @@ learner = GuidedLearner(df_train, df_test, df_guided, df_unguided, dataset_name,
 tfid, x_train, x_test, x_pool, y_train, y_test, y_pool = learner.tfid_fit()
 
 model, explainer = learner.grid_search_fit_svc(c=[0.8, 1])
-df_final_labels, uncertainty = learner.cluster_data_pool(pca=False, pca_components=100, cluster_sizes=[15])
+df_final_labels, uncertainty = learner.cluster_data_pool(pca=True, pca_components=100, cluster_sizes=[15])
 # # learner.save_to_db(df_final_labels)
