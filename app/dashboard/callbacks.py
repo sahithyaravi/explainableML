@@ -129,7 +129,7 @@ def register_callbacks(app):
                     out = row["text"]
                     if keyword is not None and keyword != None:
                         str1 = row["text"].split(row["keywords"])
-                        out = f"{str1[0]}**{keyword}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{keyword}**"
+                        out = f"{str1[0]}**{keyword}**{str1[1]}" if len(str1) > 1 and str1[1] else f"{str1[0]}**{keyword}**"
                     # if pos is not None and pos != None:
                     #     str1 = out.split(pos)
                     #     out = f"{str1[0]}**{pos}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{pos}**"

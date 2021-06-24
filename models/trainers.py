@@ -43,10 +43,10 @@ class Trainer:
             pool_end = train_frac+test_frac+pool_frac
             test_indices = indices[round(train_frac * df.shape[0]): round(test_end * df.shape[0])]
             pool_indices = indices[round(test_end * df.shape[0]): round(pool_end * df.shape[0])]
-            if unguided =="same":
+            if unguided == "same":
                 individual_indices = pool_indices
             else:
-                individual_indices = indices[round(pool_end* df.shape[0]):]
+                individual_indices = indices[round(pool_end * df.shape[0]):]
 
             self.df_train = df.iloc[train_indices]
             self.df_test = df.iloc[test_indices]

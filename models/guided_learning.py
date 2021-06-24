@@ -142,13 +142,12 @@ class GuidedLearner:
         if not cluster_sizes:
             cluster_sizes = 20
         # Dimensionality reduction
-        pca = PCA(n_components=pca_components)
-        principals = pca.fit_transform(self.shap_values_pool)
+        pca_ = PCA(n_components=pca_components)
+        cluster_data = self.x_pool
+        principals = pca_.fit_transform(cluster_data)
         tsne = TSNE(n_components=2, perplexity=20)
-        principals_tsne = tsne.fit_transform(self.shap_values_pool)
-
+        principals_tsne = tsne.fit_transform(cluster_data)
         self._get_keywords()
-
         # Uncerainty
         colorscale = [[0, 'mediumturquoise'], [1, 'salmon']]
         classwise_uncertainty = self.model.predict_proba(self.x_pool)
@@ -163,10 +162,10 @@ class GuidedLearner:
             kmeans = KMeans(n_clusters=n_clusters, n_jobs=-1, max_iter=600)
             kmeans.fit(principals)
         else:
-            n_clusters = self.find_cluster_size(n_clusters_range=cluster_sizes, data= self.shap_values_pool, labels=self.y_pool,
+            n_clusters = self.find_cluster_size(n_clusters_range=cluster_sizes, data= cluster_data, labels=self.y_pool,
                                                 n_iters=1)
             kmeans = KMeans(n_clusters=n_clusters, n_jobs=-1, max_iter=600)
-            kmeans.fit(self.shap_values_pool)
+            kmeans.fit(cluster_data)
 
         print("Homogenity score", homogeneity_score(self.y_pool, kmeans.labels_))
         print("v measure score", v_measure_score(self.y_pool, kmeans.labels_))
