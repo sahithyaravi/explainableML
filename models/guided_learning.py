@@ -9,7 +9,7 @@ from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 import plotly
 import plotly.graph_objs as go
 from sklearn.manifold import TSNE
-from sklearn.metrics import f1_score, confusion_matrix, accuracy_score, homogeneity_score
+from sklearn.metrics import f1_score, confusion_matrix, accuracy_score, homogeneity_score, v_measure_score, completeness_score
 import seaborn as sns
 import shap
 from sklearn.cluster import KMeans
@@ -78,7 +78,7 @@ class GuidedLearner:
         print("F1 score on pool ", f1_score(self.y_pool, pred))
         print("Confusion matrix of final model on pool ", confusion_matrix(self.y_pool, pred))
         print("Accuracy of final model on pool", accuracy_score(self.y_pool, pred))
-        explainer = shap.LinearExplainer(self.model, self.x_train, feature_perturbation="independent")
+        explainer = shap.Explainer(self.model, self.x_train, feature_perturbation="independent")
         # TODO extract feature importance value of each feature
         self.shap_values_train = explainer.shap_values(self.x_train)
         self.shap_values_pool = explainer.shap_values(self.x_pool)
@@ -137,41 +137,40 @@ class GuidedLearner:
         self.key_words_pos = np.array([feature_names[pos_indices]]).T
         self.key_words_neg = np.array([feature_names[neg_indices]]).T
 
-    def cluster_data_pool(self, n_clusters=20, uncertainty_visible=False):
+    def cluster_data_pool(self, uncertainty_visible=False,
+                          pca=True, pca_components=100, cluster_sizes=None):
+        if not cluster_sizes:
+            cluster_sizes = 20
+        # Dimensionality reduction
+        pca = PCA(n_components=pca_components)
+        principals = pca.fit_transform(self.shap_values_pool)
+        tsne = TSNE(n_components=2, perplexity=20)
+        principals_tsne = tsne.fit_transform(self.shap_values_pool)
+
         self._get_keywords()
+
+        # Uncerainty
         colorscale = [[0, 'mediumturquoise'], [1, 'salmon']]
         classwise_uncertainty = self.model.predict_proba(self.x_pool)
         uncertainty = 1 - np.max(classwise_uncertainty, axis=1)
 
         # cluster shapely values
-        kmeans = KMeans(n_clusters=n_clusters, n_jobs=-1, max_iter=600)
-        kmeans.fit(self.shap_values_pool)
+        print("Finding optimal cluster size")
 
-        print(self.shap_values_pool.shape, self.df_pool.shape, kmeans.labels_.shape)
+        if pca:
+            n_clusters = self.find_cluster_size(n_clusters_range=cluster_sizes, data= principals, labels=self.y_pool,
+                                                n_iters=1)
+            kmeans = KMeans(n_clusters=n_clusters, n_jobs=-1, max_iter=600)
+            kmeans.fit(principals)
+        else:
+            n_clusters = self.find_cluster_size(n_clusters_range=cluster_sizes, data= self.shap_values_pool, labels=self.y_pool,
+                                                n_iters=1)
+            kmeans = KMeans(n_clusters=n_clusters, n_jobs=-1, max_iter=600)
+            kmeans.fit(self.shap_values_pool)
+
         print("Homogenity score", homogeneity_score(self.y_pool, kmeans.labels_))
-        similarity_to_center = []
+        print("v measure score", v_measure_score(self.y_pool, kmeans.labels_))
 
-        # find centroid of cluster
-        for i, instance in enumerate(self.shap_values_pool):
-            cluster_label = kmeans.labels_[i]  # cluster of this instance
-            centroid = kmeans.cluster_centers_[cluster_label]  # cluster center of the cluster of that instance
-            similarity = 1 - cosine(instance, centroid)  # 1- cosine distance gives similarity
-            similarity_to_center.append(similarity)
-        centroid_match = [None] * n_clusters
-        centroid_indices = [None] * n_clusters
-        for i, instance in enumerate(self.shap_values_pool):
-            cluster_label = kmeans.labels_[i]
-            if centroid_match[cluster_label] is None or similarity_to_center[i] > centroid_match[cluster_label]:
-                centroid_indices[cluster_label] = i
-                centroid_match[cluster_label] = similarity_to_center[i]
-
-        # use TSNE for plotting clusters
-        # pca = PCA(n_components=2)
-        # principals = pca.fit_transform(self.shap_values_pool)
-        tsne = TSNE(n_components=2, perplexity=20)
-        principals = tsne.fit_transform(self.shap_values_pool)
-
-        # iterate through each cluster, plot, add keywords
         data = []
         collect = dict()
         color = ['hsl(' + str(h) + ',80%' + ',50%)' for h in np.linspace(0, 255, n_clusters)]
@@ -181,8 +180,8 @@ class GuidedLearner:
             cluster_text = self.df_pool['text'].values[cluster_indices]
             print("Cluster id", cluster_id, cluster_text.shape, np.unique(cluster_text).shape)
             cluster_truth = self.df_pool['label'].values[cluster_indices]
-            center_index = centroid_indices[cluster_id]
-            center_text = self.df_pool['text'].values[center_index]
+            # center_index = centroid_indices[cluster_id]
+            # center_text = self.df_pool['text'].values[center_index]
             df_cluster = pd.DataFrame({'text': cluster_text})
             df_cluster['cluster_id'] = cluster_id
             # df_cluster['centroid'] = False
@@ -194,7 +193,7 @@ class GuidedLearner:
             #                                 'centroid': True}, ignore_index=True)
             df_final_labels = pd.concat([df_final_labels, df_cluster], ignore_index=True)
 
-            cp = principals[cluster_indices]
+            cp = principals_tsne[cluster_indices]
             data.append(go.Scatter(x=cp[:, 0],
                                    y=cp[:, 1],
                                    mode='markers',
@@ -203,14 +202,14 @@ class GuidedLearner:
                                                size=10),
                                    name='cluster ' + str(cluster_id)
                                    ))
-            data.append(go.Scatter(x=[principals[center_index, 0]],
-                                   y=[principals[center_index, 1]],
-                                   mode='markers',
-                                   marker=dict(color=color[cluster_id],
-                                               size=15,
-                                               line=dict(color='black', width=5)),
-                                   name='centroid cluster ' + str(cluster_id)
-                                   ))
+            # data.append(go.Scatter(x=[principals[center_index, 0]],
+            #                        y=[principals[center_index, 1]],
+            #                        mode='markers',
+            #                        marker=dict(color=color[cluster_id],
+            #                                    size=15,
+            #                                    line=dict(color='black', width=5)),
+            #                        name='centroid cluster ' + str(cluster_id)
+            #                        ))
             data.append(go.Heatmap(x=cp[:, 0],
                                    y=cp[:, 1],
                                    z=uncertainty[cluster_indices],
@@ -239,6 +238,56 @@ class GuidedLearner:
         df_final_labels["round"] = self.round
         df_final_labels.to_sql(f"{self.dataset}_cluster", con=self.engine, if_exists="replace")
 
+    def find_cluster_size(self, n_clusters_range, data, labels, n_iters=1):
+        homogeneity_scores = []
+        v_measure_scores = []
+        completeness_scores = []
+        ranges = n_clusters_range #list(range(10, 110, 10))
+        for k in ranges:
+            vavg = 0
+            havg = 0
+            cavg = 0
+            for i in range(n_iters):
+                kmeans = KMeans(n_clusters=k, n_jobs=-1)
+                kmeans.fit(data)
+                v = v_measure_score(labels_pred=kmeans.labels_, labels_true=labels)
+                h = homogeneity_score(labels_pred=kmeans.labels_, labels_true=labels)
+                c = completeness_score(labels_pred=kmeans.labels_, labels_true=labels)
+                vavg += v
+                havg += h
+                cavg += c
+            homogeneity_scores.append(havg / n_iters)
+            v_measure_scores.append(vavg / n_iters)
+            completeness_scores.append(cavg / n_iters)
+            print(k, "done")
+
+        data = [go.Scatter(x=ranges, y=homogeneity_scores, mode="lines", name="homogeneity"),
+                go.Scatter(x=ranges, y=v_measure_scores, mode="lines", name="v_measure"),
+                go.Scatter(x=ranges, y=completeness_scores, mode="lines", name="completeness")
+                ]
+        fig = go.Figure(data=data)
+        fig.update_layout(xaxis_title="no of clusters")
+        fig.show()
+        max_homogeneity_index = v_measure_scores.index(max(v_measure_scores))
+        return ranges[max_homogeneity_index]
+
+    def find_similarity(self, kmeans, n_clusters):
+        similarity_to_center = []
+        # find centroid of cluster
+        centroid = False
+        if centroid:
+            for i, instance in enumerate(self.shap_values_pool):
+                cluster_label = kmeans.labels_[i]  # cluster of this instance
+                centroid = kmeans.cluster_centers_[cluster_label]  # cluster center of the cluster of that instance
+                similarity = 1 - cosine(instance, centroid)  # 1- cosine distance gives similarity
+                similarity_to_center.append(similarity)
+            centroid_match = [None] * n_clusters
+            centroid_indices = [None] * n_clusters
+            for i, instance in enumerate(self.shap_values_pool):
+                cluster_label = kmeans.labels_[i]
+                if centroid_match[cluster_label] is None or similarity_to_center[i] > centroid_match[cluster_label]:
+                    centroid_indices[cluster_label] = i
+                    centroid_match[cluster_label] = similarity_to_center[i]
 
 
 
