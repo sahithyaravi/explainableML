@@ -11,7 +11,7 @@ class Trainer:
         self.df_individual = None
         self.dataset_name = dataset_name
 
-    def train_test_pool_split(self, df, train_frac=0.6, test_frac=0.2, pool_frac=0.2, unguided='same'):
+    def train_test_pool_split(self, df, train_frac=0.6, test_frac=0.2, pool_frac=0.2, unguided='same', stratify=False):
         """
 
         :param df: the dataset for train test split
@@ -26,14 +26,16 @@ class Trainer:
         seed = 150
         np.random.seed(seed)
         stratify = False
+        valid_size = test_frac+pool_frac
         if stratify:
             self.df_train, df_valid = train_test_split(
-                df, test_size=train_frac+pool_frac, shuffle=True, stratify=df.label,
+                df, test_size=valid_size, shuffle=True, stratify=df.label,
                 random_state=seed)
-            self.df_test, df_rest = train_test_split(df_valid, test_size=0.5, shuffle=True, stratify=df_valid.label,
-                                                random_state=seed)
-            self.df_pool, self.df_individual = train_test_split(df_rest, test_size=0.5, shuffle=True, stratify=df_rest.label,
-                                                      random_state=seed)
+            self.df_test, df_rest = train_test_split(df_valid, test_size=round(test_frac/valid_size), shuffle=True,
+                                                     stratify=df_valid.label, random_state=seed)
+            self.df_pool, self.df_individual = train_test_split(df_rest, test_size=round(pool_frac/valid_size),
+                                                                shuffle=True, stratify=df_rest.label,
+                                                                random_state=seed)
         else:
             indices = np.random.randint(low=0, high=df.shape[0], size=df.shape[0])
             train_indices = indices[0:round(train_frac * df.shape[0])]
@@ -49,10 +51,9 @@ class Trainer:
             self.df_train = df.iloc[train_indices]
             self.df_test = df.iloc[test_indices]
             self.df_pool = df.iloc[pool_indices]
-            print("pool", self.df_pool.shape)
             self.df_pool.drop_duplicates(subset=['processed'], inplace=True, keep='last')
-            print(self.df_pool.shape)
             self.df_individual = df.iloc[individual_indices]
+            self.df_individual.drop_duplicates(subset=['processed'], inplace=True, keep='last')
             self.df_individual.reset_index(inplace=True)
             self.df_individual.drop("index", inplace=True, axis=1)
             self.df_individual.reset_index(inplace=True)
