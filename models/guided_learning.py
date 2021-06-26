@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 import nltk
 from nltk.corpus import stopwords
-
+from ast import literal_eval
 from sklearn.svm import SVC
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 import plotly
@@ -44,6 +44,7 @@ class GuidedLearner:
         self.y_train, self.y_pool, self.y_test = None, None, None
         self.shap_values_train, self. shap_values_pool = None, None
         self.key_words_pos, self.key_words_neg, self.key_words = None, None, None
+        self.df_final_labels = None
 
     def tfid_fit(self):
         self.tfid = TfidfVectorizer(max_features=5000)
@@ -173,7 +174,7 @@ class GuidedLearner:
         data = []
         collect = dict()
         color = ['hsl(' + str(h) + ',80%' + ',50%)' for h in np.linspace(0, 255, n_clusters)]
-        df_final_labels = pd.DataFrame()
+        self.df_final_labels = pd.DataFrame()
         for cluster_id in np.unique(kmeans.labels_):
             cluster_indices = np.where(kmeans.labels_ == cluster_id)
             cluster_text = self.df_pool['text'].values[cluster_indices]
@@ -190,7 +191,7 @@ class GuidedLearner:
             df_cluster['truth'] = cluster_truth
             # df_cluster = df_cluster.append({'cluster_id': cluster_id,
             #                                 'centroid': True}, ignore_index=True)
-            df_final_labels = pd.concat([df_final_labels, df_cluster], ignore_index=True)
+            self.df_final_labels  = pd.concat([self.df_final_labels , df_cluster], ignore_index=True)
 
             cp = principals_tsne[cluster_indices]
             data.append(go.Scatter(x=cp[:, 0],
@@ -221,7 +222,10 @@ class GuidedLearner:
 
         fig = go.Figure(data=data)
         fig.show()
-        return df_final_labels, uncertainty
+        df_new = pd.DataFrame(self.df_final_labels["text"].apply(splitter).to_list())
+        self.df_final_labels['index1'] = self.df_final_labels.index
+        self.df_final_labels['shaps'] = self.df_final_labels['index1'].map(self.return_shap_values_tfid)
+        return self.df_final_labels, uncertainty, df_new
 
     def save_to_db(self, df_final_labels):
         SQLALCHEMY_DATABASE_URI = Config.SQLALCHEMY_DATABASE_URI
@@ -287,6 +291,27 @@ class GuidedLearner:
                 if centroid_match[cluster_label] is None or similarity_to_center[i] > centroid_match[cluster_label]:
                     centroid_indices[cluster_label] = i
                     centroid_match[cluster_label] = similarity_to_center[i]
+
+
+    def return_shap_values_tfid(self, index):
+        text = self.df_final_labels['text'][index].split()
+        shap_indices = []
+        data = []
+        for word in text:
+            if word in self.tfid.vocabulary_:
+                data.append(word)
+                shap_indices.append(self.tfid.vocabulary_[word])
+
+        # print(shap_indices)
+        values = self.shap_values_pool[index][shap_indices]
+
+        return values
+
+
+def splitter(s):
+    spl = s.split()
+    return spl  #[" ".join(spl[i:i+2]) for i in range(0, len(spl), 2)]
+
 
 
 

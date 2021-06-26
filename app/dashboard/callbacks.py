@@ -10,8 +10,9 @@ import logging
 import os
 import time
 from flask_login import current_user
-
 from app.run_config import *
+
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -49,14 +50,13 @@ def register_callbacks(app):
                 text = dcc.Markdown('''
                 * For this experiment, you will be presented groups of sentences.
                 * Select the sentences in the group which contain **hate-speech***.
-                * **Similar** sentences are present within the group. So it is possible to label all sentences by
-                looking at 1-2 samples in the group.
+                * **Similar** sentences may be present within the group.
                 * Important words may be highlighted in **bold**
                 * Click next to continue.
                 ''')
                 next = html.Button('NEXT', id='next_round', autoFocus=True,
                                    style={'color': 'white', 'background-color': 'green', 'marginLeft': '100px'})
-            elif dataset == "yelp_dataset_cluster" or dataset=="bank_dataset_cluster":
+            elif dataset == "yelp_dataset_cluster" or dataset == "bank_dataset_cluster":
                 text = dcc.Markdown('''
                            * For this experiment, you will be presented groups of sentences.
                            * Select the sentences in the group which contain **positive review***.
@@ -111,6 +111,7 @@ def register_callbacks(app):
         print(next_round, " next round ", dataset)
         progress_percent = 0
 
+
         if next_round is not None and next_round:
             if next_round == 1:
                 start_time = time.time()
@@ -120,27 +121,31 @@ def register_callbacks(app):
             df, progress_percent = fetch_queries(dataset, next_round, selected_rows)
 
             table_text = []
-            for index, row in df.iterrows():
-                row["text"] = " " + row["text"] + " "
-                if "keywords" in df.columns:
-                    keyword = row["keywords"]
-                    pos = row["positive"]
-                    neg = row["negative"]
-                    out = row["text"]
-                    if keyword is not None and keyword != None:
-                        str1 = row["text"].split(row["keywords"])
-                        out = f"{str1[0]}**{keyword}**{str1[1]}" if len(str1) > 1 and str1[1] else f"{str1[0]}**{keyword}**"
-                    # if pos is not None and pos != None:
-                    #     str1 = out.split(pos)
-                    #     out = f"{str1[0]}**{pos}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{pos}**"
-                    # if neg is not None and neg!= None:
-                    #     str1 = out.split(neg)
-                    #     out = f"{str1[0]}**{neg}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{neg}**"
-
-                else:
-                    out = row["text"]
-                table_text.append(out)
-            if table_text:
+            # for index, row in df.iterrows():
+            #     row["text"] = " " + row["text"] + " "
+            #     if "keywords" in df.columns:
+            #         keyword = row["keywords"]
+            #         pos = row["positive"]
+            #         neg = row["negative"]
+            #         out = row["text"]
+            #         if False and  keyword is not None and keyword != None:
+            #             str1 = row["text"].split(row["keywords"])
+            #             if len(str1) > 1:
+            #                 out = f"{str1[0]}**{keyword}**{str1[1]}"
+            #             else:
+            #                 out = f"{str1[0]}**{keyword}**"
+            #         # if pos is not None and pos != None:
+            #         #     str1 = out.split(pos)
+            #         #     out = f"{str1[0]}**{pos}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{pos}**"
+            #         # if neg is not None and neg!= None:
+            #         #     str1 = out.split(neg)
+            #         #     out = f"{str1[0]}**{neg}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{neg}**"
+            #
+            #     else:
+            #         out = row["text"]
+            #     table_text.append(out)
+            if not df.empty:
+                table_text = split_dfs(df)
                 note = dcc.Markdown(''' * Use **select all checkbox** if all sentences in the group are hate speech''',
                 style={'marginLeft': '50px'})
                 checkall = dcc.Checklist(options=
@@ -150,7 +155,8 @@ def register_callbacks(app):
                                          id='checkall',
                                          style={'marginLeft': '50px'}
                                          )
-                display_table = create_table(pd.DataFrame(table_text))
+                display_table = create_table(table_text)
+
                 output = html.Div([note, checkall, display_table])
             else:
                 end = time.time()
@@ -229,10 +235,13 @@ def fetch_queries(dataset, next_round, selected_rows):
 
 
 def create_table(df):
+    print(df.head())
+    non_shap_cols = [col for col in df.columns if col[0] != 's']
+    styles = discrete_background_color_bins(df)
     table = dash_table.DataTable(
-        columns=[dict(name=i, id=i, presentation='markdown', type='text') for i in df.columns],
+        columns=[dict(name=i, id=i, presentation='markdown', type='text', hidden=True) for i in df.columns],
         data=df.to_dict('records'),
-        # style_as_list_view=True,
+        style_as_list_view=True,
         # filter_action="native",
         row_selectable='multi',
         selected_rows=[],
@@ -248,8 +257,96 @@ def create_table(df):
                      'overflowX': 'scroll',
                      'marginBottom': '50px',
                      'marginLeft': '100px'},
-        page_action='none',
+        style_data_conditional=styles
 
     )
     return table
 
+
+def split_dfs(df, n_bins=5, columns='all'):
+    from ast import literal_eval
+    df_split_text = pd.DataFrame(df["text"].apply(splitter_dataframe).to_list())
+    df_split_text.columns = [str(i) for i in df_split_text.columns]
+    print(df_split_text.columns)
+
+    # create shap frame
+    df['shaps'] = df['shaps'].str.replace('\s+', ' ', regex=True)
+    df['shaps'] = df['shaps'].str.replace('[', ' ', regex=True)
+    df['shaps'] = df['shaps'].str.replace(']', ' ', regex=True)
+
+    df_split_shaps = pd.DataFrame(df["shaps"].apply(splitter_dataframe).to_list())
+    df_split_shaps.columns = ['shaps'+str(i) for i in df_split_shaps.columns]
+    print(df_split_shaps.head())
+
+    # df_shaps = pd.DataFrame(df["shaps"].to_list())
+    # df_shaps.columns = ['shap{}'.format(x) for x in df_shaps.columns]
+    # print(df_shaps.head())
+    df_split_shaps = df_split_shaps.astype(float)
+    df_all = pd.concat([df_split_text, df_split_shaps], axis=1)
+    df_all.head()
+    return df_all
+
+
+def splitter_dataframe(s):
+    spl = s.split()
+    return [" ".join(spl[i:i+1]) for i in range(0, len(spl), 1)]
+
+
+def discrete_background_color_bins(df, n_bins=7, columns='all'):
+    import colorlover
+    bounds = [i * (1.0 / n_bins) for i in range(n_bins + 1)]
+    df_numeric_columns = [col for col in df.columns if col[0]=='s']
+    df_max = 1
+    df_min = -1
+    ranges = [
+        ((df_max - df_min) * i) + df_min
+        for i in bounds
+    ]
+    styles = []
+    legend = []
+    print(len(bounds))
+    color = 'black'
+
+
+    for column in df_numeric_columns:
+        str_column = column.split('shaps')[1]
+        print(column, str_column)
+
+        styles.append({
+            'if': {
+                'column_id': str_column,
+                'filter_query': (
+                        '{{{column}}} < {min_bound}'
+                        # (' && {{{column}}} < {max_bound}' if (i < len(bounds) - 1) else '')
+                ).format(column=column, min_bound=0),
+
+            },
+            'backgroundColor': 'blue',
+            'color': color
+        })
+        styles.append({
+            'if': {
+                'column_id': str_column,
+                'filter_query': (
+                    '{{{column}}} > {bound}'
+                    # (' && {{{column}}} < {max_bound}' if (i < len(bounds) - 1) else '')
+                ).format(column=column, bound=0),
+
+            },
+            'backgroundColor': 'red',
+            'color': color
+        })
+        # # legend.append(
+        # #     html.Div(style={'display': 'inline-block', 'width': '60px'}, children=[
+        # #         html.Div(
+        # #             style={
+        # #                 'backgroundColor': backgroundColor,
+        # #                 'borderLeft': '1px rgb(50, 50, 50) solid',
+        # #                 'height': '10px'
+        # #             }
+        # #         ),
+        # #         html.Small(round(min_bound, 2), style={'paddingLeft': '2px'})
+        # #     ])
+        # )
+
+    return styles  # html.Div(legend, style={'padding': '5px 0 5px 0'}))
