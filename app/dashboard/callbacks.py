@@ -239,9 +239,9 @@ def create_table(df):
     non_shap_cols = [col for col in df.columns if col[0] != 's']
     styles = discrete_background_color_bins(df)
     table = dash_table.DataTable(
-        columns=[dict(name=i, id=i, presentation='markdown', type='text', hidden=True) for i in df.columns],
+        columns=[dict(name=i, id=i, presentation='markdown', type='text', hidden=True) for i in non_shap_cols],
         data=df.to_dict('records'),
-        style_as_list_view=True,
+        style_as_list_view=False,
         # filter_action="native",
         row_selectable='multi',
         selected_rows=[],
@@ -265,9 +265,11 @@ def create_table(df):
 
 def split_dfs(df, n_bins=5, columns='all'):
     from ast import literal_eval
+    df['text'] = df['text'].str.replace('\s+', ' ', regex=True)
     df_split_text = pd.DataFrame(df["text"].apply(splitter_dataframe).to_list())
     df_split_text.columns = [str(i) for i in df_split_text.columns]
-    print(df_split_text.columns)
+    df_split_text.fillna('', inplace=True)
+    print(df_split_text.head())
 
     # create shap frame
     df['shaps'] = df['shaps'].str.replace('\s+', ' ', regex=True)
@@ -318,10 +320,10 @@ def discrete_background_color_bins(df, n_bins=7, columns='all'):
                 'filter_query': (
                         '{{{column}}} < {min_bound}'
                         # (' && {{{column}}} < {max_bound}' if (i < len(bounds) - 1) else '')
-                ).format(column=column, min_bound=0),
+                ).format(column=column, min_bound=-0.01),
 
             },
-            'backgroundColor': 'blue',
+            'backgroundColor': 'lightsteelblue',
             'color': color
         })
         styles.append({
@@ -330,10 +332,10 @@ def discrete_background_color_bins(df, n_bins=7, columns='all'):
                 'filter_query': (
                     '{{{column}}} > {bound}'
                     # (' && {{{column}}} < {max_bound}' if (i < len(bounds) - 1) else '')
-                ).format(column=column, bound=0),
+                ).format(column=column, bound=0.01),
 
             },
-            'backgroundColor': 'red',
+            'backgroundColor': 'pink',
             'color': color
         })
         # # legend.append(
