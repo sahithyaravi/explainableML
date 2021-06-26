@@ -119,33 +119,36 @@ def register_callbacks(app):
                 logging.debug("Updating labels for next round", next_round-1)
 
             df, progress_percent = fetch_queries(dataset, next_round, selected_rows)
+            color = False
+            if color == False:
+                table_text = []
+                for index, row in df.iterrows():
+                    row["text"] = " " + row["text"] + " "
+                    if "keywords" in df.columns:
+                        keyword = row["keywords"]
+                        pos = row["positive"]
+                        neg = row["negative"]
+                        out = row["text"]
+                        if False and  keyword is not None and keyword != None:
+                            str1 = row["text"].split(row["keywords"])
+                            if len(str1) > 1:
+                                out = f"{str1[0]}**{keyword}**{str1[1]}"
+                            else:
+                                out = f"{str1[0]}**{keyword}**"
+                        # if pos is not None and pos != None:
+                        #     str1 = out.split(pos)
+                        #     out = f"{str1[0]}**{pos}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{pos}**"
+                        # if neg is not None and neg!= None:
+                        #     str1 = out.split(neg)
+                        #     out = f"{str1[0]}**{neg}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{neg}**"
 
-            table_text = []
-            # for index, row in df.iterrows():
-            #     row["text"] = " " + row["text"] + " "
-            #     if "keywords" in df.columns:
-            #         keyword = row["keywords"]
-            #         pos = row["positive"]
-            #         neg = row["negative"]
-            #         out = row["text"]
-            #         if False and  keyword is not None and keyword != None:
-            #             str1 = row["text"].split(row["keywords"])
-            #             if len(str1) > 1:
-            #                 out = f"{str1[0]}**{keyword}**{str1[1]}"
-            #             else:
-            #                 out = f"{str1[0]}**{keyword}**"
-            #         # if pos is not None and pos != None:
-            #         #     str1 = out.split(pos)
-            #         #     out = f"{str1[0]}**{pos}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{pos}**"
-            #         # if neg is not None and neg!= None:
-            #         #     str1 = out.split(neg)
-            #         #     out = f"{str1[0]}**{neg}**{str1[1]}" if len(str1) > 1 else f"{str1[0]}**{neg}**"
-            #
-            #     else:
-            #         out = row["text"]
-            #     table_text.append(out)
-            if not df.empty:
+                    else:
+                        out = row["text"]
+                    table_text.append(out)
+            else:
                 table_text = split_dfs(df)
+            if not df.empty:
+
                 note = dcc.Markdown(''' * Use **select all checkbox** if all sentences in the group are hate speech''',
                 style={'marginLeft': '50px'})
                 checkall = dcc.Checklist(options=
@@ -155,7 +158,7 @@ def register_callbacks(app):
                                          id='checkall',
                                          style={'marginLeft': '50px'}
                                          )
-                display_table = create_table(table_text)
+                display_table = create_table(table_text, color)
 
                 output = html.Div([note, checkall, display_table])
             else:
@@ -234,10 +237,14 @@ def fetch_queries(dataset, next_round, selected_rows):
     return queries, progress_percent*100
 
 
-def create_table(df):
+def create_table(df, color):
+
     print(df.head())
     non_shap_cols = [col for col in df.columns if col[0] != 's']
-    styles = discrete_background_color_bins(df)
+    if color == False:
+        styles = None
+    else:
+        styles = discrete_background_color_bins(df)
     table = dash_table.DataTable(
         columns=[dict(name=i, id=i, presentation='markdown', type='text', hidden=True) for i in non_shap_cols],
         data=df.to_dict('records'),
