@@ -126,10 +126,10 @@ def register_callbacks(app):
                     row["text"] = " " + row["text"] + " "
                     if "keywords" in df.columns:
                         keyword = row["keywords"]
-                        pos = row["positive"]
-                        neg = row["negative"]
+                        # pos = row["positive"]
+                        # neg = row["negative"]
                         out = row["text"]
-                        if False and  keyword is not None and keyword != None:
+                        if keyword is not None and keyword != None:
                             str1 = row["text"].split(row["keywords"])
                             if len(str1) > 1:
                                 out = f"{str1[0]}**{keyword}**{str1[1]}"
@@ -145,6 +145,7 @@ def register_callbacks(app):
                     else:
                         out = row["text"]
                     table_text.append(out)
+                table_text = pd.DataFrame(table_text)
             else:
                 table_text = split_dfs(df)
             if not df.empty:
@@ -238,35 +239,56 @@ def fetch_queries(dataset, next_round, selected_rows):
 
 
 def create_table(df, color):
-
+    print("CREATE TABLE", color)
     print(df.head())
-    non_shap_cols = [col for col in df.columns if col[0] != 's']
-    if color == False:
-        styles = None
-    else:
-        styles = discrete_background_color_bins(df)
-    table = dash_table.DataTable(
-        columns=[dict(name=i, id=i, presentation='markdown', type='text', hidden=True) for i in non_shap_cols],
-        data=df.to_dict('records'),
-        style_as_list_view=False,
-        # filter_action="native",
-        row_selectable='multi',
-        selected_rows=[],
-        id='datatable',
-        style_header={'backgroundColor': 'white', 'fontWeight': 'bold', 'display':'none'},
-        style_cell={'textAlign': 'left', 'backgroundColor': 'white', 'height':'auto',
-                    'whiteSpace': 'normal',
-                    "fontFamily": "Nutino Sans",  "fontSize": 16},
-        style_table={'minHeight': '400px',
-                     'maxWidth': '1200px',
-                     'maxHeight': '800px',
-                     'overflowY': 'scroll',
-                     'overflowX': 'scroll',
-                     'marginBottom': '50px',
-                     'marginLeft': '100px'},
-        style_data_conditional=styles
 
-    )
+    if color == False:
+        non_shap_cols = df
+        table = dash_table.DataTable(
+            columns=[dict(name=i, id=i, presentation='markdown', type='text', hidden=True) for i in non_shap_cols],
+            data=df.to_dict('records'),
+            style_as_list_view=False,
+            # filter_action="native",
+            row_selectable='multi',
+            selected_rows=[],
+            id='datatable',
+            style_header={'backgroundColor': 'white', 'fontWeight': 'bold', 'display': 'none'},
+            style_cell={'textAlign': 'left', 'backgroundColor': 'white', 'height': 'auto',
+                        'whiteSpace': 'normal',
+                        "fontFamily": "Nutino Sans", "fontSize": 16},
+            style_table={'minHeight': '400px',
+                         'maxWidth': '1500px',
+                         'maxHeight': '1000px',
+                         'overflowY': 'scroll',
+                         'overflowX': 'scroll',
+                         'marginBottom': '50px',
+                         'marginLeft': '100px'},
+        )
+    else:
+        non_shap_cols = [col for col in df.columns if col[0] != 's']
+        styles = discrete_background_color_bins(df)
+        table = dash_table.DataTable(
+            columns=[dict(name=i, id=i, presentation='markdown', type='text', hidden=True) for i in non_shap_cols],
+            data=df.to_dict('records'),
+            style_as_list_view=False,
+            # filter_action="native",
+            row_selectable='multi',
+            selected_rows=[],
+            id='datatable',
+            style_header={'backgroundColor': 'white', 'fontWeight': 'bold', 'display':'none'},
+            style_cell={'textAlign': 'left', 'backgroundColor': 'white', 'height':'auto',
+                        'whiteSpace': 'normal',
+                        "fontFamily": "Nutino Sans",  "fontSize": 16},
+            style_table={'minHeight': '400px',
+                         'maxWidth': '1500px',
+                         'maxHeight': '1000px',
+                         'overflowY': 'scroll',
+                         'overflowX': 'scroll',
+                         'marginBottom': '50px',
+                         'marginLeft': '100px'},
+            style_data_conditional=styles
+
+        )
     return table
 
 
@@ -327,10 +349,10 @@ def discrete_background_color_bins(df, n_bins=7, columns='all'):
                 'filter_query': (
                         '{{{column}}} < {min_bound}'
                         # (' && {{{column}}} < {max_bound}' if (i < len(bounds) - 1) else '')
-                ).format(column=column, min_bound=-0.01),
+                ).format(column=column, min_bound=-0.05),
 
             },
-            'backgroundColor': 'lightsteelblue',
+            'backgroundColor': 'pink',
             'color': color
         })
         styles.append({
@@ -339,7 +361,7 @@ def discrete_background_color_bins(df, n_bins=7, columns='all'):
                 'filter_query': (
                     '{{{column}}} > {bound}'
                     # (' && {{{column}}} < {max_bound}' if (i < len(bounds) - 1) else '')
-                ).format(column=column, bound=0.01),
+                ).format(column=column, bound=0.05),
 
             },
             'backgroundColor': 'pink',

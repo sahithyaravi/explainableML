@@ -124,19 +124,19 @@ class GuidedLearner:
     def _get_keywords(self):
         print("shap values", len(self.shap_values_pool))
         feature_names = np.array(self.tfid.get_feature_names())  # len(feature_names) = #cols in shap_values_pool
-        arr = self.shap_values_pool.copy()
-        arr[arr == 0] = np.nan
-        arr_pos = self.shap_values_pool.copy()
-        arr_neg = self.shap_values_pool.copy()
-        arr_pos[arr_pos <= 0] = np.nan
-        arr_neg[arr_neg >= 0] = np.nan
-        abs_arr = np.abs(arr)
+        abs_arr = np.abs(self.shap_values_pool)
         indices = np.nanargmax(abs_arr, axis=1)
-        pos_indices = np.nanargmax(arr_pos, axis=1)
-        neg_indices = np.nanargmin(arr_neg, axis=1)
+        print(indices)
         self.key_words = np.array([feature_names[indices]]).T
-        self.key_words_pos = np.array([feature_names[pos_indices]]).T
-        self.key_words_neg = np.array([feature_names[neg_indices]]).T
+        # arr_pos = self.shap_values_pool.copy()
+        # arr_neg = self.shap_values_pool.copy()
+        # arr_pos[arr_pos <= 0] = np.nan
+        # arr_neg[arr_neg >= 0] = np.nan
+        # pos_indices = np.nanargmax(arr_pos, axis=1)
+        # neg_indices = np.nanargmin(arr_neg, axis=1)
+
+        # self.key_words_pos = np.array([feature_names[pos_indices]]).T
+        # self.key_words_neg = np.array([feature_names[neg_indices]]).T
 
     def cluster_data_pool(self, uncertainty_visible=False,
                           pca=True, pca_components=100, cluster_sizes=None):
@@ -148,7 +148,7 @@ class GuidedLearner:
         principals = pca_.fit_transform(cluster_data)
         tsne = TSNE(n_components=2, perplexity=20)
         principals_tsne = tsne.fit_transform(cluster_data)
-        self._get_keywords()
+        # self._get_keywords()
         # Uncerainty
         colorscale = [[0, 'mediumturquoise'], [1, 'salmon']]
         classwise_uncertainty = self.model.predict_proba(self.x_pool)
@@ -185,13 +185,13 @@ class GuidedLearner:
             df_cluster = pd.DataFrame({'text': cluster_text})
             df_cluster['cluster_id'] = cluster_id
             # df_cluster['centroid'] = False
-            df_cluster['positive'] = self.key_words_pos[cluster_indices]
-            df_cluster['negative'] = self.key_words_neg[cluster_indices]
-            df_cluster['keywords'] = self.key_words[cluster_indices]
+            # df_cluster['positive'] = self.key_words_pos[cluster_indices]
+            # df_cluster['negative'] = self.key_words_neg[cluster_indices]
+            # df_cluster['keywords'] = self.key_words[cluster_indices]
             df_cluster['truth'] = cluster_truth
             # df_cluster = df_cluster.append({'cluster_id': cluster_id,
             #                                 'centroid': True}, ignore_index=True)
-            self.df_final_labels  = pd.concat([self.df_final_labels , df_cluster], ignore_index=True)
+            self.df_final_labels = pd.concat([self.df_final_labels , df_cluster], ignore_index=True)
 
             cp = principals_tsne[cluster_indices]
             data.append(go.Scatter(x=cp[:, 0],
@@ -225,6 +225,7 @@ class GuidedLearner:
         df_new = pd.DataFrame(self.df_final_labels["text"].apply(splitter).to_list())
         self.df_final_labels['index1'] = self.df_final_labels.index
         self.df_final_labels['shaps'] = self.df_final_labels['index1'].map(self.return_shap_values_tfid)
+        self.df_final_labels['keywords'] = self.df_final_labels['index1'].map(self.return_keyword)
         return self.df_final_labels, uncertainty, df_new
 
     def save_to_db(self, df_final_labels):
@@ -301,12 +302,25 @@ class GuidedLearner:
             if word in self.tfid.vocabulary_:
                 data.append(word)
                 shap_indices.append(self.tfid.vocabulary_[word])
+            else:
+                shap_indices.append(self.tfid.vocabulary_['the'])
 
         # print(shap_indices)
         values = self.shap_values_pool[index][shap_indices]
+        print(len(values), len(text))
 
         return values
 
+    def return_keyword(self, index):
+        text = self.df_final_labels['text'][index].split()
+        values = self.df_final_labels['shaps'][index]
+        values = values.tolist()
+        max_value = max([abs(x) for x in values])
+        if max_value in values:
+            max_value_index = values.index(max_value)
+        else:
+            max_value_index = values.index(-max_value)
+        return text[max_value_index]
 
 def splitter(s):
     spl = s.split()
