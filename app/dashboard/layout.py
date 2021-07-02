@@ -41,9 +41,19 @@ queries = dcc.Loading(html.Div(id='queries'))
 
 url = dcc.Location(id='url')
 
-progress_bar = html.Progress( id='progress', value=0, max=100)
+progress_bar = html.Progress(id='progress', value=0, max=100)
 
 ###################
+color = dcc.RadioItems(
+    id='color',
+    options=[
+        {'label': 'Color-code explanations', 'value': True},
+        {'label': 'No color-code for explanations', 'value': False},
+
+    ],
+    value=False
+)
+
 
 radio_label = dcc.RadioItems(
     id='radio_label',
@@ -79,11 +89,13 @@ def serve_layout():
                                        html.Div(choose_dataset, style={'width': '30%'})
                                        ]),
                     html.Div(className='control-element',
+                             children=[html.Div(children=["Choose mode of explanation"], style={'width': '30%'}),
+                                       html.Div(color, style={'width': '30%'})]),
+                    html.Div(className='control-element',
                              children=[html.Div(children=["  "],
                                                 style={'width': '30%'}),
                                        html.Div(submit_dataset, style={'width': '30%'})
-                                       ]),
-
+                                       ])
                  ]),
 
             html.Div(id='info', style={'marginLeft': "50px", 'width': '60%'}),

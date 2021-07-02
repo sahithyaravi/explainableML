@@ -103,10 +103,11 @@ def register_callbacks(app):
                    Output('progress', 'value')],
                   [Input('next_round', 'n_clicks'),
                    ],
-                  [State('datatable', 'selected_rows'),
+                  [State('color', 'value'),
+                   State('datatable', 'selected_rows'),
                    State('select_dataset', 'value'),
                    State('start_time', 'data')])
-    def get_queries_write_labels(next_round,  selected_rows, dataset, start_time):
+    def get_queries_write_labels(next_round, color, selected_rows, dataset, start_time):
         output = ""
         print(next_round, " next round ", dataset)
         progress_percent = 0
@@ -119,7 +120,7 @@ def register_callbacks(app):
                 logging.debug("Updating labels for next round", next_round-1)
 
             df, progress_percent = fetch_queries(dataset, next_round, selected_rows)
-            color = False
+            # color = False
             if color == False:
                 table_text = []
                 for index, row in df.iterrows():
@@ -255,7 +256,7 @@ def create_table(df, color):
             style_header={'backgroundColor': 'white', 'fontWeight': 'bold', 'display': 'none'},
             style_cell={'textAlign': 'left', 'backgroundColor': 'white', 'height': 'auto',
                         'whiteSpace': 'normal',
-                        "fontFamily": "Nutino Sans", "fontSize": 16},
+                        "fontFamily": "sans-serif", "fontSize": 20, 'fontWeight': 'bold'},
             style_table={'minHeight': '400px',
                          'maxWidth': '1500px',
                          'maxHeight': '1000px',
@@ -349,10 +350,10 @@ def discrete_background_color_bins(df, n_bins=7, columns='all'):
                 'filter_query': (
                         '{{{column}}} < {min_bound}'
                         # (' && {{{column}}} < {max_bound}' if (i < len(bounds) - 1) else '')
-                ).format(column=column, min_bound=-0.05),
+                ).format(column=column, min_bound=0),
 
             },
-            'backgroundColor': 'pink',
+            'backgroundColor': 'lightsteelblue',
             'color': color
         })
         styles.append({
@@ -361,7 +362,7 @@ def discrete_background_color_bins(df, n_bins=7, columns='all'):
                 'filter_query': (
                     '{{{column}}} > {bound}'
                     # (' && {{{column}}} < {max_bound}' if (i < len(bounds) - 1) else '')
-                ).format(column=column, bound=0.05),
+                ).format(column=column, bound=0),
 
             },
             'backgroundColor': 'pink',

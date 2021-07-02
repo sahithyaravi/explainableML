@@ -9,6 +9,7 @@ from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 import plotly
 import plotly.graph_objs as go
 from sklearn.manifold import TSNE
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.metrics import f1_score, confusion_matrix, accuracy_score, homogeneity_score, v_measure_score, completeness_score
 import seaborn as sns
 import shap
@@ -58,8 +59,13 @@ class GuidedLearner:
         return self.tfid, self.x_train, self.x_test, self.x_pool, self.y_train, self.y_test, self.y_pool
 
     def grid_search_fit_svc(self, c=None):
+        # s = StandardScaler()
+        # s.fit(self.x_train)
+        # self.x_train = s.transform(self.x_train)
+        # self.x_pool = s.transform(self.x_pool)
+        # self.x_test = s.transform(self.x_test)
         if c is None:
-            c = [0.8, 1]
+            c = [0.8, 1, 2]
         max_iter = 1000
         best_f1 = 0
         model = None
@@ -88,12 +94,13 @@ class GuidedLearner:
         return self.model, explainer
 
     def fit_tree(self):
-        estimators = [100, 500, 1000, 1500, 2000, 5000]
-        features = ['auto', 0.8, 'sqrt']
-        max_depth = [20, 30, 50, 100, None]
+        estimators = [100]
+        features = ['sqrt']
+        max_depth = [100]
         best_model = None
         max_score = 0
         for e in estimators:
+            print(e)
             for f in features:
                 for m in max_depth:
                     self.model = GradientBoostingClassifier(n_estimators=e, max_features=f, max_depth=m)
@@ -163,6 +170,7 @@ class GuidedLearner:
             kmeans = KMeans(n_clusters=n_clusters, n_jobs=-1, max_iter=600)
             kmeans.fit(principals)
         else:
+
             n_clusters = self.find_cluster_size(n_clusters_range=cluster_sizes, data= cluster_data, labels=self.y_pool,
                                                 n_iters=1)
             kmeans = KMeans(n_clusters=n_clusters, n_jobs=-1, max_iter=600)

@@ -11,7 +11,7 @@ class Trainer:
         self.df_individual = None
         self.dataset_name = dataset_name
 
-    def train_test_pool_split(self, df, train_frac=0.6, test_frac=0.2, pool_frac=0.2, unguided='same', stratify=False):
+    def train_test_pool_split(self, df, train_frac=0.6, test_frac=0.2, pool_frac=0.2, unguided='same', stratify=False, seed=50):
         """
 
         :param df: the dataset for train test split
@@ -23,17 +23,16 @@ class Trainer:
 
         df.dropna(inplace=True)
         df.drop_duplicates(subset=['processed'], inplace=True, keep='last')
-        seed = 150
         np.random.seed(seed)
-        stratify = False
+
         valid_size = test_frac+pool_frac
         if stratify:
             self.df_train, df_valid = train_test_split(
-                df, test_size=valid_size, shuffle=True, stratify=df.label,
+                df, train_size=train_frac, shuffle=True, stratify=df.label,
                 random_state=seed)
-            self.df_test, df_rest = train_test_split(df_valid, test_size=round(test_frac/valid_size), shuffle=True,
+            self.df_test, df_rest = train_test_split(df_valid, train_size=round(test_frac/(1-train_frac), 4), shuffle=True,
                                                      stratify=df_valid.label, random_state=seed)
-            self.df_pool, self.df_individual = train_test_split(df_rest, test_size=round(pool_frac/valid_size),
+            self.df_pool, self.df_individual = train_test_split(df_rest, train_size=round(pool_frac/(1-train_frac-test_frac), 4),
                                                                 shuffle=True, stratify=df_rest.label,
                                                                 random_state=seed)
         else:
