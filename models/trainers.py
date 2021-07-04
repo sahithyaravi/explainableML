@@ -11,7 +11,7 @@ class Trainer:
         self.df_individual = None
         self.dataset_name = dataset_name
 
-    def train_test_pool_split(self, df, train_frac=0.6, test_frac=0.2, pool_frac=0.2, unguided='same', stratify=False, seed=50):
+    def train_test_pool_split(self, df, train_frac=0.6, test_frac=0.2, pool_frac=0.2, unguided='same', stratify=False, seed=150):
         """
 
         :param df: the dataset for train test split
