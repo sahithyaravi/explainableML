@@ -147,12 +147,25 @@ class GuidedLearner:
         # self.key_words_neg = np.array([feature_names[neg_indices]]).T
 
     def cluster_data_pool(self, uncertainty_visible=False,
-                          pca=True, pca_components=100, cluster_sizes=None):
+                          pca=True, pca_components=100, cluster_sizes=None,
+                          cluster_with='data'):
+        """
+
+        :param uncertainty_visible: If True, show uncertainty map in cluster visualization
+        :param pca: if True, perform PCA before clustering
+        :param pca_components: number of PCA components (should be below number of instances)
+        :param cluster_sizes: array of different sizes
+        :param cluster_with: you choose to cluster in data space "data" or shapely space: "shap"
+        :return:
+        """
         if not cluster_sizes:
             cluster_sizes = 20
         # Dimensionality reduction
         pca_ = PCA(n_components=pca_components)
-        cluster_data = self.shap_values_pool
+        if cluster_with == "shap":
+            cluster_data = self.shap_values_pool
+        else:
+            cluster_data = self.x_pool
         principals = pca_.fit_transform(cluster_data)
         tsne = TSNE(n_components=2, perplexity=20)
         principals_tsne = tsne.fit_transform(cluster_data)
