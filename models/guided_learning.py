@@ -58,12 +58,13 @@ class GuidedLearner:
         self.y_pool = self.df_pool['label'].values
         return self.tfid, self.x_train, self.x_test, self.x_pool, self.y_train, self.y_test, self.y_pool
 
-    def grid_search_fit_svc(self, c=None):
-        # s = StandardScaler()
-        # s.fit(self.x_train)
-        # self.x_train = s.transform(self.x_train)
-        # self.x_pool = s.transform(self.x_pool)
-        # self.x_test = s.transform(self.x_test)
+    def grid_search_fit_svc(self, c=None, scale=True):
+        if scale:
+            s = StandardScaler()
+            s.fit(self.x_train)
+            self.x_train = s.transform(self.x_train)
+            self.x_pool = s.transform(self.x_pool)
+            self.x_test = s.transform(self.x_test)
         if c is None:
             c = [0.8, 1, 2]
         max_iter = 1000
