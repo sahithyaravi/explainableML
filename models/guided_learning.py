@@ -58,7 +58,7 @@ class GuidedLearner:
         self.y_pool = self.df_pool['label'].values
         return self.tfid, self.x_train, self.x_test, self.x_pool, self.y_train, self.y_test, self.y_pool
 
-    def grid_search_fit_svc(self, c=None, scale=True):
+    def grid_search_fit_svc(self, c=None, scale=False):
         if scale:
             s = StandardScaler()
             s.fit(self.x_train)
@@ -148,7 +148,7 @@ class GuidedLearner:
 
     def cluster_data_pool(self, uncertainty_visible=False,
                           pca=True, pca_components=100, cluster_sizes=None,
-                          cluster_with='data'):
+                          cluster_space='data'):
         """
 
         :param uncertainty_visible: If True, show uncertainty map in cluster visualization
@@ -162,7 +162,7 @@ class GuidedLearner:
             cluster_sizes = 20
         # Dimensionality reduction
         pca_ = PCA(n_components=pca_components)
-        if cluster_with == "shap":
+        if cluster_space == "shap":
             cluster_data = self.shap_values_pool
         else:
             cluster_data = self.x_pool

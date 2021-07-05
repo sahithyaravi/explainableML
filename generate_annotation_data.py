@@ -29,5 +29,5 @@ model, explainer = learner.grid_search_fit_svc(c=[0.8, 1])
 df_final_labels, uncertainty, _ = learner.cluster_data_pool(pca=True,
                                                             pca_components=100,
                                                             cluster_sizes=[15],
-                                                            cluster_space='data')
+                                                            cluster_space='shap')
 learner.save_to_db(df_final_labels)
